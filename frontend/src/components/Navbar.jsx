@@ -24,7 +24,7 @@ const Navbar = () => {
       className={`fixed w-full z-50 transition-all duration-300 ${
         isScrolled 
           ? 'bg-white text-gray-800 shadow-md py-3' 
-          : 'bg-transparent text-white py-5'
+          : 'bg-transparent text-indigo-600 py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,7 +34,7 @@ const Navbar = () => {
             <div className={`h-8 w-8 rounded-md ${isScrolled ? 'bg-indigo-600' : 'bg-white'} flex items-center justify-center mr-2`}>
               <span className={`font-bold ${isScrolled ? 'text-white' : 'text-indigo-600'}`}>M</span>
             </div>
-            <span className="font-bold text-xl">MediScanAI</span>
+            <span className={`font-bold text-xl ${isScrolled ? 'text-gray-800' : 'text-indigo-700'}`}>MediScanAI</span>
           </div>
 
           {/* Desktop menu */}
@@ -42,8 +42,10 @@ const Navbar = () => {
             {['Features', 'How It Works', 'Benefits', 'FAQ'].map((item) => (
               <a 
                 key={item} 
-                href={`#${item.toLowerCase().replace(' ', '-')}`}
-                className={`font-medium hover:${isScrolled ? 'text-indigo-600' : 'text-gray-200'} transition`}
+                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                className={isScrolled 
+                  ? "font-medium text-gray-700 hover:text-indigo-600 transition" 
+                  : "font-medium text-indigo-800 hover:text-indigo-600 transition"}
               >
                 {item}
               </a>
@@ -52,22 +54,18 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className={`
-              px-4 py-2 rounded-lg transition-all font-medium
-              ${isScrolled 
-                ? 'text-gray-700 hover:text-indigo-600' 
-                : 'text-white hover:text-gray-200'}
-            `}>
+            <a href="/signin" className={isScrolled 
+              ? "px-4 py-2 rounded-lg transition-all font-medium text-gray-700 hover:text-indigo-600" 
+              : "px-4 py-2 rounded-lg transition-all font-medium text-indigo-800 hover:text-indigo-600"
+            }>
               Sign In
-            </button>
-            <button className={`
-              px-4 py-2 rounded-lg transition-all font-medium
-              ${isScrolled 
-                ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
-                : 'bg-white text-indigo-600 hover:bg-gray-100'}
-            `}>
+            </a>
+            <a href="/signup" className={isScrolled 
+              ? "px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700" 
+              : "px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700"
+            }>
               Sign Up
-            </button>
+            </a>
           </div>
 
           {/* Mobile menu button */}
@@ -77,11 +75,11 @@ const Navbar = () => {
               className="flex items-center justify-center h-10 w-10"
             >
               {!isMobileMenuOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${isScrolled ? 'text-gray-800' : 'text-indigo-800'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${isScrolled ? 'text-gray-800' : 'text-indigo-800'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
@@ -97,7 +95,7 @@ const Navbar = () => {
             {['Features', 'How It Works', 'Benefits', 'FAQ'].map((item) => (
               <a 
                 key={item} 
-                href={`#${item.toLowerCase().replace(' ', '-')}`}
+                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
                 className="font-medium py-2 hover:text-indigo-600"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -105,12 +103,12 @@ const Navbar = () => {
               </a>
             ))}
             <div className="flex flex-col space-y-3 mt-3">
-              <button className="w-full py-2 text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg">
+              <a href="/signin" className="w-full py-2 text-center text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg">
                 Sign In
-              </button>
-              <button className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
+              </a>
+              <a href="/signup" className="w-full py-3 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
                 Sign Up
-              </button>
+              </a>
             </div>
           </div>
         </div>
