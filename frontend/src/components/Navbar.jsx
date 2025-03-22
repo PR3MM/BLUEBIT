@@ -35,8 +35,8 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className={`h-8 w-8 rounded-md ${isScrolled ? 'bg-indigo-600' : 'bg-white'} flex items-center justify-center mr-2`}>
               <span className={`font-bold ${isScrolled ? 'text-white' : 'text-indigo-600'}`}>M</span>
-            </div>
-            <span className={`font-bold text-xl ${isScrolled ? 'text-gray-800' : 'text-indigo-700'}`}>MediScanAI</span>
+            </div><a href="/">
+            <span className={`font-bold text-xl ${isScrolled ? 'text-gray-800' : 'text-indigo-700'}`}>MediScanAI</span></a>
           </div>
 
           {/* Desktop menu */}
