@@ -50,15 +50,23 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
             <button className={`
-              px-5 py-2 rounded-lg transition-all font-medium
+              px-4 py-2 rounded-lg transition-all font-medium
+              ${isScrolled 
+                ? 'text-gray-700 hover:text-indigo-600' 
+                : 'text-white hover:text-gray-200'}
+            `}>
+              Sign In
+            </button>
+            <button className={`
+              px-4 py-2 rounded-lg transition-all font-medium
               ${isScrolled 
                 ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
                 : 'bg-white text-indigo-600 hover:bg-gray-100'}
             `}>
-              Download App
+              Sign Up
             </button>
           </div>
 
@@ -96,9 +104,14 @@ const Navbar = () => {
                 {item}
               </a>
             ))}
-            <button className="mt-3 w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
-              Download App
-            </button>
+            <div className="flex flex-col space-y-3 mt-3">
+              <button className="w-full py-2 text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg">
+                Sign In
+              </button>
+              <button className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
+                Sign Up
+              </button>
+            </div>
           </div>
         </div>
       )}
