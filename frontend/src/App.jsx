@@ -7,6 +7,7 @@ import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 // Import all components
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import AddReceipt from './components/AddReceipt';
 
 // Page components
 import HeroSection from './components/HeroSection'
@@ -87,7 +88,17 @@ const AppLayout = () => {
               </div>
             } 
           />
-          
+           <Route 
+            path="/addreceipt" 
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-8">
+                  <AddReceipt/>
+                </div>
+              </div>
+            } 
+          />
+           {/* <Route path="/addreceipt" element={<AddReceipt />} /> */}
           {/* Protected routes */}
           <Route 
             path="/dashboard" 
