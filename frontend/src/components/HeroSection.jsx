@@ -7,10 +7,10 @@ const HeroSection = () => {
         {/* Left content */}
         <div className="lg:w-1/2 text-center lg:text-left mb-12 lg:mb-0">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-            Save on Medication with AI-Powered Prescription Analysis
+            Save on Medicines with AI-Powered Prescription Analysis
           </h1>
           <p className="mt-6 text-xl text-gray-600 max-w-2xl">
-            Instantly find affordable generic alternatives to your prescribed medications
+            Instantly find affordable alternatives to your prescribed medications
           </p>
           <div className="mt-10 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
             <a href="/signup" className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
@@ -33,7 +33,7 @@ const HeroSection = () => {
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               </div>
               <div className="mx-auto bg-white rounded-md flex items-center px-3 py-1 text-sm text-gray-500 shadow-sm">
-                mediscanai.com
+                mediscanai.in
               </div>
             </div>
             
