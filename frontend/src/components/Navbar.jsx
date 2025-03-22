@@ -39,7 +39,7 @@ const Navbar = () => {
 
           {/* Desktop menu */}
           <div className="hidden md:flex space-x-8">
-            {['Features', 'How It Works', 'Benefits', 'FAQ'].map((item) => (
+            {['Features', 'How It Works', 'Benefits'].map((item) => (
               <a 
                 key={item} 
                 href={`#${item.toLowerCase().replace(/ /g, '-')}`}
@@ -92,7 +92,7 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white text-gray-800 mt-3 py-4 shadow-lg">
           <div className="flex flex-col space-y-3 px-4">
-            {['Features', 'How It Works', 'Benefits', 'FAQ'].map((item) => (
+            {['Features', 'How It Works', 'Benefits', 'Pharmacies'].map((item) => (
               <a 
                 key={item} 
                 href={`#${item.toLowerCase().replace(/ /g, '-')}`}

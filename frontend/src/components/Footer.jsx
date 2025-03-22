@@ -33,7 +33,7 @@ const Footer = () => {
             <ul className="space-y-2">
               {['Features', 'How it Works', 'Pricing', 'FAQ', 'Sign Up'].map((item) => (
                 <li key={item}>
-                  <a href="#" className="text-gray-400 hover:text-white transition">
+                  <a href={item === 'Sign Up' ? '/signup' : `#${item.toLowerCase().replace(/ /g, '-')}`} className="text-gray-400 hover:text-white transition">
                     {item}
                   </a>
                 </li>
