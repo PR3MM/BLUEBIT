@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react'
 import './App.css'
+import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 
 // Import all components
 import Navbar from './components/Navbar'
@@ -15,7 +16,6 @@ import AppPreviewSection from './components/AppPreviewSection'
 import BenefitsSection from './components/BenefitsSection'
 import TrustSection from './components/TrustSection'
 import CtaSection from './components/CtaSection'
-import AuthPage from './components/AuthPage'
 import Dashboard from './components/Dashboard'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
 
@@ -32,10 +32,16 @@ const HomePage = () => (
   </>
 );
 
-// Auth route protection wrapper
+// Auth route protection wrapper using Clerk
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  return isAuthenticated ? children : <Navigate to="/signin" />;
+  const { isSignedIn, isLoaded } = useAuth();
+  
+  if (!isLoaded) {
+    // You can show a loading spinner here if you want
+    return <div>Loading...</div>;
+  }
+  
+  return isSignedIn ? children : <Navigate to="/signin" />;
 };
 
 // Wrapper for the app layout with conditional navbar
@@ -61,8 +67,26 @@ const AppLayout = () => {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/signin" element={<AuthPage initialTab="signin" />} />
-          <Route path="/signup" element={<AuthPage initialTab="signup" />} />
+          <Route 
+            path="/signin" 
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-8">
+                  <SignIn routing="path" path="/signin" fallbackRedirectUrl="/dashboard" />
+                </div>
+              </div>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-8">
+                  <SignUp routing="path" path="/signup" fallbackRedirectUrl="/dashboard" />
+                </div>
+              </div>
+            } 
+          />
           
           {/* Protected routes */}
           <Route 
@@ -132,6 +156,8 @@ const App = () => {
     });
   };
 
+  // Replace with your actual Clerk publishable key
+  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
   return (
     <BrowserRouter>
       <AppLayout />

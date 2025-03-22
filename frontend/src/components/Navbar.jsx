@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth, UserButton } from '@clerk/clerk-react';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,18 +56,26 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <a href="/signin" className={isScrolled 
-              ? "px-4 py-2 rounded-lg transition-all font-medium text-gray-700 hover:text-indigo-600" 
-              : "px-4 py-2 rounded-lg transition-all font-medium text-indigo-800 hover:text-indigo-600"
-            }>
-              Sign In
-            </a>
-            <a href="/signup" className={isScrolled 
-              ? "px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700" 
-              : "px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700"
-            }>
-              Sign Up
-            </a>
+            {isLoaded && (
+              isSignedIn ? (
+                <UserButton afterSignOutUrl="/" />
+              ) : (
+                <>
+                  <a href="/signin" className={isScrolled 
+                    ? "px-4 py-2 rounded-lg transition-all font-medium text-gray-700 hover:text-indigo-600" 
+                    : "px-4 py-2 rounded-lg transition-all font-medium text-indigo-800 hover:text-indigo-600"
+                  }>
+                    Sign In
+                  </a>
+                  <a href="/signup" className={isScrolled 
+                    ? "px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700" 
+                    : "px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700"
+                  }>
+                    Sign Up
+                  </a>
+                </>
+              )
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -92,7 +102,7 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white text-gray-800 mt-3 py-4 shadow-lg">
           <div className="flex flex-col space-y-3 px-4">
-            {['Features', 'How It Works', 'Benefits', 'Pharmacies'].map((item) => (
+            {['Features', 'How It Works', 'Benefits'].map((item) => (
               <a 
                 key={item} 
                 href={`#${item.toLowerCase().replace(/ /g, '-')}`}
@@ -102,14 +112,22 @@ const Navbar = () => {
                 {item}
               </a>
             ))}
-            <div className="flex flex-col space-y-3 mt-3">
-              <a href="/signin" className="w-full py-2 text-center text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg">
-                Sign In
-              </a>
-              <a href="/signup" className="w-full py-3 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
-                Sign Up
-              </a>
-            </div>
+            {isLoaded && (
+              isSignedIn ? (
+                <div className="flex justify-center py-2">
+                  <UserButton afterSignOutUrl="/" />
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-3 mt-3">
+                  <a href="/signin/*" className="w-full py-2 text-center text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg">
+                    Sign In
+                  </a>
+                  <a href="/signup/*" className="w-full py-3 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition">
+                    Sign Up
+                  </a>
+                </div>
+              )
+            )}
           </div>
         </div>
       )}

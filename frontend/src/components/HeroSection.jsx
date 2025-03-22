@@ -141,7 +141,7 @@ const HeroSection = () => {
       </div>
       
       {/* Add this to your CSS file or style tag */}
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);

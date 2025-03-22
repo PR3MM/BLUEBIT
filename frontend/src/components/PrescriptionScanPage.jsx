@@ -1,7 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 
 const PrescriptionScanPage = () => {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const navigate = useNavigate();
   const [captureMode, setCaptureMode] = useState(null); // 'camera', 'upload', or null
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
@@ -11,6 +14,13 @@ const PrescriptionScanPage = () => {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  
+  // Redirect if not signed in
+  React.useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      navigate('/signin');
+    }
+  }, [isLoaded, isSignedIn, navigate]);
   
   // Handle camera activation
   const activateCamera = async () => {

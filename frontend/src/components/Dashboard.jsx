@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
          BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user, isLoaded } = useUser();
   const [activeTab, setActiveTab] = useState('saved');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -174,6 +177,24 @@ const Dashboard = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
   
+  // Function to get user's full name from Clerk
+  const getUserFullName = () => {
+    if (!isLoaded || !user) return 'Loading...';
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'User';
+  };
+
+  // Function to get user's email from Clerk
+  const getUserEmail = () => {
+    if (!isLoaded || !user) return 'Loading...';
+    return user.primaryEmailAddress?.emailAddress || 'No email available';
+  };
+
+  // Function to get user's profile image URL from Clerk
+  const getUserImageUrl = () => {
+    if (!isLoaded || !user) return '';
+    return user.imageUrl || '';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
@@ -250,10 +271,10 @@ const Dashboard = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <span className="absolute top-0 right-0 h-5 w-5 bg-yellow-400 text-indigo-900 font-bold rounded-full text-xs flex items-center justify-center border-2 border-white">3</span>
+                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-indigo-600"></span>
                 </button>
                 
-                {/* Notification Dropdown */}
+                {/* Notifications Dropdown */}
                 {notificationsOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden">
                     <div className="py-1">
@@ -291,38 +312,49 @@ const Dashboard = () => {
                 )}
               </div>
               
-              {/* Profile Dropdown */}
-              <div className="relative">
-                <button 
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition-all duration-150"
-                >
-                  <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-indigo-600 font-medium border-2 border-indigo-300">
-                    JS
+              {/* User Profile */}
+              <div className="relative ml-3">
+                {isLoaded && user ? (
+                  <div>
+                    <button
+                      onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                      className="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white"
+                    >
+                      <span className="sr-only">Open user menu</span>
+                      <img
+                        className="h-8 w-8 rounded-full bg-gray-300 object-cover"
+                        src={getUserImageUrl()}
+                        alt=""
+                      />
+                      <span className="hidden md:block ml-2 text-sm font-medium text-white">{getUserFullName()}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="hidden md:block h-4 w-4 ml-1 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
-                </button>
-                
-                {/* Profile Menu */}
+                ) : (
+                  <div className="animate-pulse">
+                    <div className="h-8 w-8 rounded-full bg-indigo-400"></div>
+                  </div>
+                )}
+
+                {/* Profile dropdown */}
                 {profileDropdownOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden">
-                    <div className="pt-4 pb-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-500">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-indigo-600 font-medium border-2 border-indigo-300">
-                            JS
-                          </div>
-                        </div>
-                        <div className="ml-3">
-                          <div className="text-base font-medium text-white">John Smith</div>
-                          <div className="text-sm font-medium text-indigo-200">john@example.com</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="py-1" role="none">
-                      <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition-colors duration-150" role="menuitem">Your Profile</a>
-                      <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition-colors duration-150" role="menuitem">Settings</a>
-                      <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition-colors duration-150" role="menuitem">Sign out</a>
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
+                      <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Your Profile</a>
+                      <a href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Settings</a>
+                      <button
+                        onClick={() => {
+                          window.Clerk.signOut().then(() => {
+                            navigate('/');
+                          });
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                      >
+                        Sign out
+                      </button>
                     </div>
                   </div>
                 )}
@@ -895,7 +927,7 @@ const Dashboard = () => {
                       <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt className="text-sm font-medium text-gray-500">Full name</dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">John Smith</span>
+                          <span className="flex-grow">{getUserFullName()}</span>
                           <span className="ml-4 flex-shrink-0">
                             <button type="button" className="inline-flex items-center px-3 py-1.5 border border-indigo-300 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 transition-colors duration-150">
                               Update
@@ -906,7 +938,7 @@ const Dashboard = () => {
                       <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                         <dt className="text-sm font-medium text-gray-500">Email address</dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">john@example.com</span>
+                          <span className="flex-grow">{getUserEmail()}</span>
                           <span className="ml-4 flex-shrink-0">
                             <button type="button" className="inline-flex items-center px-3 py-1.5 border border-indigo-300 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 transition-colors duration-150">
                               Update
