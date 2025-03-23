@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { ClerkProvider } from '@clerk/clerk-react'
 
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 
 // Import your Publishable Key
@@ -15,6 +16,7 @@ if (!PUBLISHABLE_KEY) {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <SpeedInsights />
     <ClerkProvider 
       publishableKey={PUBLISHABLE_KEY}
       signInUrl="/signin"
@@ -23,5 +25,5 @@ createRoot(document.getElementById('root')).render(
     >
     <App />
     </ClerkProvider>
-  </StrictMode>,
+  </StrictMode>
 )
