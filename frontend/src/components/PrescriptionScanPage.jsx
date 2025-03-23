@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { createWorker } from 'tesseract.js';
+import samplePrescription from '../assets/sample_prescription.png';
 
 const PrescriptionScanPage = () => {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -10,10 +12,12 @@ const PrescriptionScanPage = () => {
   const [filePreview, setFilePreview] = useState(null);
   const [processingStatus, setProcessingStatus] = useState(null); // null, 'capturing', 'enhancing', 'extracting', 'identifying'
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [extractedText, setExtractedText] = useState('');
   
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const canvasRef = useRef(null);
   
   // Redirect if not signed in
   React.useEffect(() => {
@@ -45,8 +49,19 @@ const PrescriptionScanPage = () => {
   const capturePhoto = () => {
     if (!videoRef.current) return;
     
-    // Start processing simulation
-    simulateProcessing();
+    // Create canvas to capture image from video
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    
+    // Get image data as base64
+    const imgData = canvas.toDataURL('image/png');
+    setFilePreview(imgData);
+    
+    // Process the captured image
+    processImage(imgData);
     
     // Close camera stream
     if (streamRef.current) {
@@ -78,41 +93,74 @@ const PrescriptionScanPage = () => {
   // Handle file upload submission
   const handleFileUpload = () => {
     if (selectedFile) {
-      // Start processing simulation
-      simulateProcessing();
+      // Process the uploaded file
+      processImage(filePreview);
       setCaptureMode(null);
     }
   };
   
-  // Simulate prescription processing
-  const simulateProcessing = () => {
-    const stages = ['capturing', 'enhancing', 'extracting', 'identifying'];
-    let currentStage = 0;
-    
-    setProcessingStatus(stages[currentStage]);
-    setProcessingProgress(0);
-    
-    const interval = setInterval(() => {
-      setProcessingProgress(prev => {
-        if (prev >= 100) {
-          currentStage++;
-          
-          if (currentStage >= stages.length) {
-            clearInterval(interval);
-            // In a real app, you would navigate to results or dashboard here
-            setTimeout(() => {
-              setProcessingStatus(null);
-              setProcessingProgress(0);
-            }, 1000);
-            return 100;
-          }
-          
-          setProcessingStatus(stages[currentStage]);
-          return 0;
-        }
-        return prev + 10;
+  // Process image with Tesseract OCR
+  const processImage = async (imageData) => {
+    try {
+      setProcessingStatus('capturing');
+      setProcessingProgress(0);
+      
+      // In Tesseract.js v4, language is specified during worker creation
+      setProcessingStatus('enhancing');
+      setProcessingProgress(25);
+      
+      // Create worker with language specified directly
+      const worker = await createWorker('eng');
+      
+      // Optional: Set custom parameters for better medical term recognition
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-+()%/mg',
       });
-    }, 300);
+      
+      // Update progress
+      setProcessingStatus('extracting');
+      setProcessingProgress(50);
+      
+      // Recognize text in image
+      const { data } = await worker.recognize(imageData);
+      setProcessingProgress(75);
+      
+      // Process the extracted text
+      let prescriptionText = data.text;
+      
+      // Basic text processing to clean up OCR results
+      prescriptionText = prescriptionText
+        .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+        .replace(/(\r\n|\n|\r)/gm, '\n') // Normalize line breaks
+        .trim();                         // Remove leading/trailing whitespace
+      
+      // Save the processed text
+      setExtractedText(prescriptionText);
+      
+      // Update progress
+      setProcessingStatus('identifying');
+      setProcessingProgress(90);
+      
+      // Finish up
+      setTimeout(() => {
+        setProcessingStatus(null);
+        setProcessingProgress(100);
+        
+        // Log the extracted text for debugging
+        console.log("Extracted Prescription Text:", prescriptionText);
+        
+        // Here you would continue with medication identification based on the text
+        // Example: identifyMedications(prescriptionText);
+      }, 1000);
+      
+      // Terminate worker when done
+      await worker.terminate();
+    } catch (error) {
+      console.error("Text extraction error:", error);
+      alert("Error processing prescription. Please try again.");
+      setProcessingStatus(null);
+      setProcessingProgress(0);
+    }
   };
   
   // Cancel the current capture mode
@@ -138,9 +186,27 @@ const PrescriptionScanPage = () => {
           
           {/* Processing icon in center */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            {processingStatus === 'capturing' && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            )}
+            {processingStatus === 'enhancing' && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            )}
+            {processingStatus === 'extracting' && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            )}
+            {processingStatus === 'identifying' && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            )}
           </div>
         </div>
       </div>
@@ -148,7 +214,7 @@ const PrescriptionScanPage = () => {
       <h3 className="text-2xl font-semibold text-gray-800 mb-3">
         {processingStatus === 'capturing' && 'Capturing Image'}
         {processingStatus === 'enhancing' && 'Enhancing Quality'}
-        {processingStatus === 'extracting' && 'Extracting Text'}
+        {processingStatus === 'extracting' && 'Extracting Text with OCR'}
         {processingStatus === 'identifying' && 'Identifying Medications'}
       </h3>
       
@@ -175,13 +241,79 @@ const PrescriptionScanPage = () => {
       </div>
       
       <p className="text-gray-600 mb-4">
-        Please wait while we process your prescription...
+        {processingStatus === 'extracting' 
+          ? 'Using Tesseract OCR to recognize text in your prescription...' 
+          : 'Please wait while we process your prescription...'}
       </p>
       <p className="text-xs text-gray-500 max-w-xs mx-auto">
         Our AI is analyzing your prescription to find potential savings and alternatives.
       </p>
     </div>
   );
+  
+  // Render text extraction results
+  const renderResults = () => {
+    if (!extractedText) return null;
+    
+    return (
+      <div className="w-full max-w-xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden border border-indigo-100 mt-8">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-gray-900">
+              Extracted Prescription Text
+            </h3>
+            <div className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
+              Analysis Complete
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 overflow-auto max-h-64">
+            <textarea
+              className="text-sm text-gray-700 font-mono w-full h-full min-h-[150px] bg-transparent focus:outline-none resize-none"
+              value={extractedText || ""}
+              onChange={(e) => setExtractedText(e.target.value)}
+              placeholder="No text detected. Please try again with a clearer image or manually enter medications here."
+            />
+          </div>
+          
+          <div className="flex items-start mb-6">
+            <div className="flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="ml-2 text-sm text-gray-600">
+              You can review and edit the extracted text before proceeding. Add or modify medications as needed.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => setExtractedText('')}
+              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex-1 flex justify-center items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+              Clear
+            </button>
+            <button 
+              onClick={() => {
+                // Navigate to medications identification page with the extracted text
+                navigate('/medications', { state: { extractedText } });
+              }}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md font-medium flex-1 flex justify-center items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+              </svg>
+              Find Medications
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
   
   // Render the camera interface
   const renderCamera = () => (
@@ -391,6 +523,8 @@ const PrescriptionScanPage = () => {
             renderCamera()
           ) : captureMode === 'upload' ? (
             renderUpload()
+          ) : extractedText ? (
+            renderResults()
           ) : (
             /* Capture options */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
@@ -506,7 +640,7 @@ const PrescriptionScanPage = () => {
               <div className="mt-8 flex justify-center">
                 <div className="relative w-full max-w-sm border border-indigo-100 rounded-xl overflow-hidden shadow-md">
                   <img 
-                    src="https://placehold.co/600x400/e2e8f0/475569?text=Sample+Prescription+Image" 
+                    src={samplePrescription} 
                     alt="Sample prescription" 
                     className="w-full h-auto"
                   />

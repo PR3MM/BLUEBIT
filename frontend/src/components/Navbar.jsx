@@ -82,17 +82,15 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Auth Buttons & Add Receipt */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* {isLoaded &&
-              (isSignedIn ? ( */}
+            {isLoaded &&
+              (isSignedIn ? (
                 <>
-                  {/* Add Receipt Button */}
                   <a
-                    href="/addreceipt"
+                    href="/scan-prescription"
                     className="px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700"
                   >
-                    Add Receipt
+                    New Scan
                   </a>
 
                   {/* Sign Out Button */}
@@ -106,7 +104,7 @@ const Navbar = () => {
                   {/* User Button */}
                   <UserButton afterSignOutUrl="/" />
                 </>
-              {/* ) : (
+              ) : (
                 <>
                   <a
                     href="/signin"
@@ -129,7 +127,7 @@ const Navbar = () => {
                     Sign Up
                   </a>
                 </>
-              ))} */}
+              ))}
           </div>
 
           {/* Mobile menu button */}
@@ -196,11 +194,11 @@ const Navbar = () => {
               (isSignedIn ? (
                 <>
                   <a
-                    href="/addreceipt"
+                    href="/scan-prescription"
                     className="w-full py-2 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Add Receipt
+                    New Scan
                   </a>
                   <button
                     onClick={handleSignOut}

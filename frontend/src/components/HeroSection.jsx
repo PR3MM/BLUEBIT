@@ -1,6 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
+// import { useAuth } from '../context/AuthContext'; // Adjust import based on your auth implementation
 
 const HeroSection = () => {
+  const { isSignedIn, isLoaded ,signOut} = useAuth(); // Adjust based on your auth implementation 
+
   return (
     <section className="relative bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 py-24 overflow-hidden">
       {/* Background decorative elements */}
@@ -23,13 +28,16 @@ const HeroSection = () => {
             Instantly find affordable alternatives to your prescribed medications with our cutting-edge AI technology
           </p>
           <div className="mt-10 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-            <a href="/signup" className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-indigo-500/30 transition duration-300 transform hover:-translate-y-1 flex items-center justify-center group">
+            <Link 
+              to={ isSignedIn ? "/dashboard" : "/signup"} 
+              className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-indigo-500/30 transition duration-300 transform hover:-translate-y-1 flex items-center justify-center group"
+            >
               Get Started Free
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
-            </a>
+            </Link>
             <a href="#how-it-works" className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-lg shadow-md hover:bg-indigo-50 border border-indigo-100 transition duration-300 flex items-center justify-center group">
               How It Works
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 group-hover:translate-y-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

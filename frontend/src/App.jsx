@@ -2,12 +2,13 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react'
 import './App.css'
-import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
+import { SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 
 // Import all components
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import AddReceipt from './components/AddReceipt';
+import UserList from './components/UserList';
 
 // Page components
 import HeroSection from './components/HeroSection'
@@ -19,6 +20,7 @@ import TrustSection from './components/TrustSection'
 import CtaSection from './components/CtaSection'
 import Dashboard from './components/Dashboard'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
+import MedicationIdentificationPage from './components/MedicationIdentificationPage'
 
 // Create a HomePage component that combines all landing page sections
 const HomePage = () => (
@@ -68,6 +70,7 @@ const AppLayout = () => {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/users" element={<UserList />} />
           <Route 
             path="/signin" 
             element={
@@ -98,7 +101,7 @@ const AppLayout = () => {
               </div>
             } 
           />
-           {/* <Route path="/addreceipt" element={<AddReceipt />} /> */}
+           <Route path="/addreceipt" element={<AddReceipt />} />
           {/* Protected routes */}
           <Route 
             path="/dashboard" 
@@ -117,6 +120,8 @@ const AppLayout = () => {
               </ProtectedRoute>
             } 
           />
+          
+          <Route path="/medications" element={<MedicationIdentificationPage />} />
           
           {/* Catch-all route for 404 */}
           <Route 
@@ -167,8 +172,6 @@ const App = () => {
     });
   };
 
-  // Replace with your actual Clerk publishable key
-  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
   return (
     <BrowserRouter>
       <AppLayout />

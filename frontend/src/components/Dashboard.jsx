@@ -195,6 +195,43 @@ const Dashboard = () => {
     return user.imageUrl || '';
   };
 
+  // Show loading screen if user data is not loaded yet
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            {/* App logo and name */}
+            <div className="flex items-center justify-center mb-8">
+              <svg className="h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              <span className="ml-3 text-3xl font-bold text-indigo-600">MediScanAI</span>
+            </div>
+            
+            {/* Loading spinner */}
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mx-auto"></div>
+            <h2 className="mt-8 text-lg font-medium text-gray-600">Loading your dashboard...</h2>
+            <p className="mt-2 text-sm text-gray-500">Please wait while we fetch your personalized information</p>
+          </div>
+          
+          {/* Loading skeleton for content */}
+          <div className="mt-16 max-w-3xl mx-auto">
+            <div className="animate-pulse">
+              <div className="rounded-xl bg-gray-200 h-32 w-full mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="col-span-2 rounded-xl bg-gray-200 h-80"></div>
+                <div className="rounded-xl bg-gray-200 h-80"></div>
+              </div>
+              <div className="rounded-xl bg-gray-200 h-64 mb-6"></div>
+              <div className="rounded-xl bg-gray-200 h-48"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
