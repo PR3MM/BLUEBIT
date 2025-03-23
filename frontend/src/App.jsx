@@ -56,7 +56,19 @@ const ProtectedRoute = ({ children }) => {
     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mx-auto"></div>
     <h2 className="mt-8 text-lg font-medium text-gray-600">Loading your dashboard...</h2>
     <p className="mt-2 text-sm text-gray-500">Please wait while we fetch your personalized information</p>
-  </div>;
+  {/* Loading skeleton for content */}
+  <div className="mt-16 max-w-3xl mx-auto">
+  <div className="animate-pulse">
+    <div className="rounded-xl bg-gray-200 h-32 w-full mb-6"></div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="col-span-2 rounded-xl bg-gray-200 h-80"></div>
+      <div className="rounded-xl bg-gray-200 h-80"></div>
+    </div>
+    <div className="rounded-xl bg-gray-200 h-64 mb-6"></div>
+    <div className="rounded-xl bg-gray-200 h-48"></div>
+  </div>
+</div>
+  </div>
   }
   
   return isSignedIn ? children : <Navigate to="/signin" />;
