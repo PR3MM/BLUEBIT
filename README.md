@@ -17,23 +17,12 @@
 - [Features](#features)
 - [Live Demo](#live-demo)
 - [Tech Stack](#tech-stack)
-- [System Architecture](#system-architecture)
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 - [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [Data Models](#data-models)
 - [Screenshots](#screenshots)
-- [Performance Optimization](#performance-optimization)
-- [Roadmap](#roadmap)
 - [Contributing](#contributing)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Security](#security)
 - [FAQs](#faqs)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
-- [Contact](#contact)
 
 ## 🔍 Overview
 
