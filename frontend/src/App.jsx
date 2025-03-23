@@ -91,7 +91,7 @@ const AppLayout = () => {
             element={
               <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
-                  <SignIn routing="path" path="/signin" fallbackRedirectUrl="/dashboard" />
+                  <SignIn routing="path" path="/signin" fallbackRedirectUrl="/dashboard" navigate={'/dashboard'} />
                 </div>
               </div>
             } 
@@ -101,7 +101,7 @@ const AppLayout = () => {
             element={
               <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
-                  <SignUp routing="path" path="/signup" fallbackRedirectUrl="/dashboard" />
+                  <SignUp routing="path" path="/signup" fallbackRedirectUrl="/dashboard" navigate={'/dashboard'} />
                 </div>
               </div>
             } 
