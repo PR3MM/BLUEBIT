@@ -576,14 +576,14 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <div className="mt-5 sm:mt-0 flex space-x-3">
+                      <Link to="/scan-prescription">
                     <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-indigo-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition-all duration-150">
                       <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       </svg>
-                      <Link to="/scan-prescription">
                         New Scan
-                      </Link>
                     </button>
+                      </Link>
                     <button className="inline-flex items-center px-4 py-2 border border-white rounded-lg text-sm font-medium text-white bg-indigo-500 bg-opacity-30 hover:bg-opacity-40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition-all duration-150">
                       View Activity
                     </button>
