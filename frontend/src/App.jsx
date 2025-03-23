@@ -22,6 +22,9 @@ import Dashboard from './components/Dashboard'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
 import MedicationIdentificationPage from './components/MedicationIdentificationPage'
 
+import { SpeedInsights } from '@vercel/speed-insights/react';
+
+
 // Create a HomePage component that combines all landing page sections
 const HomePage = () => (
   <>
@@ -201,6 +204,7 @@ const App = () => {
           </svg>
         </button>
       )}
+      <SpeedInsights />
     </BrowserRouter>
   )
 }
