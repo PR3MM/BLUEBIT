@@ -68,9 +68,9 @@ const Navbar = () => {
           {/* Desktop menu */}
           <div className="hidden md:flex space-x-8">
             {['Features', 'How It Works', 'Benefits'].map((item) => (
-              <Link
-                key={item}
-                to={`#${item.toLowerCase().replace(/ /g, '-')}`}
+              <a
+                key={item}  
+                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
                 className={`font-medium transition duration-300 ease-in-out ${
                   isScrolled
                     ? 'text-gray-700 hover:text-indigo-600'
@@ -78,7 +78,7 @@ const Navbar = () => {
                 }`}
               >
                 {item}
-              </Link>
+              </a>
             ))}
           </div>
 
@@ -177,14 +177,17 @@ const Navbar = () => {
         <div className="md:hidden bg-white text-gray-800 mt-3 py-4 shadow-lg">
           <div className="flex flex-col space-y-3 px-4">
             {['Features', 'How It Works', 'Benefits'].map((item) => (
-              <Link
+              <a 
                 key={item}
-                to={`#${item.toLowerCase().replace(/ /g, '-')}`}
-                className="font-medium py-2 hover:text-indigo-600 transition duration-300 ease-in-out"
-                onClick={() => setIsMobileMenuOpen(false)}
+                href ={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                className={
+                  isScrolled
+                    ? 'font-medium text-gray-700 hover:text-indigo-600 transition'
+                    : 'font-medium text-indigo-800 hover:text-indigo-600 transition'
+                }
               >
                 {item}
-              </Link>
+              </a>
             ))}
             {isLoaded &&
               (isSignedIn ? (

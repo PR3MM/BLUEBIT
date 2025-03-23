@@ -15,13 +15,13 @@ const MedicationIdentificationPage = () => {
   // Set API key from environment variable
   useEffect(() => {
     const key = import.meta.env.VITE_GEMINI_API_KEY;
-    console.log("Environment variables available:", Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
-    console.log("API Key defined:", key ? "Yes" : "No");
+    // console.log("Environment variables available:", Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
+    // console.log("API Key defined:", key ? "Yes" : "No");
     
     if (key) {
       setApiKey(key);
     } else {
-      console.error("Gemini API key not found in environment variables");
+    //   console.error("Gemini API key not found in environment variables");
       setError("API key not configured. Check your .env file to set up the Gemini API key.");
     }
   }, []);
@@ -53,11 +53,11 @@ const MedicationIdentificationPage = () => {
     
     try {
       if (!apiKey) {
-        console.warn("API key not set yet, falling back to demo data");
+        // console.warn("API key not set yet, falling back to demo data");
         throw new Error("API key not available. Using demo data instead.");
       }
 
-      console.log("Using API key to make request:", apiKey.substring(0, 5) + "...");
+    //   console.log("Using API key to make request:", apiKey.substring(0, 5) + "...");
       
       // Prepare the prompt for Gemini
       const prompt = `
@@ -137,7 +137,7 @@ const MedicationIdentificationPage = () => {
       setIdentifiedMedications(medications);
       setIsLoading(false);
     } catch (err) {
-      console.error("Error identifying medications:", err);
+    //   console.error("Error identifying medications:", err);
       
       // If API fails, fall back to identifying some common medications as a demo
       const commonMedications = [

@@ -39,7 +39,7 @@ const PrescriptionScanPage = () => {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      console.error("Error accessing camera:", err);
+    //   console.error("Error accessing camera:", err);
       alert("Unable to access camera. Please check permissions and try again.");
       setCaptureMode(null);
     }
@@ -147,7 +147,7 @@ const PrescriptionScanPage = () => {
         setProcessingProgress(100);
         
         // Log the extracted text for debugging
-        console.log("Extracted Prescription Text:", prescriptionText);
+        // console.log("Extracted Prescription Text:", prescriptionText);
         
         // Here you would continue with medication identification based on the text
         // Example: identifyMedications(prescriptionText);
@@ -156,7 +156,7 @@ const PrescriptionScanPage = () => {
       // Terminate worker when done
       await worker.terminate();
     } catch (error) {
-      console.error("Text extraction error:", error);
+    //   console.error("Text extraction error:", error);
       alert("Error processing prescription. Please try again.");
       setProcessingStatus(null);
       setProcessingProgress(0);

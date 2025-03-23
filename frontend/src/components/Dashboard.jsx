@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   // Mock data for the dashboard
   const savedMedications = [
@@ -179,24 +180,39 @@ const Dashboard = () => {
   
   // Function to get user's full name from Clerk
   const getUserFullName = () => {
-    if (!isLoaded || !user) return 'Loading...';
+    if (!isLoaded || !user)  setLoading(false);
     return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'User';
+  };
+
+  // Function to get user's initials from Clerk
+  const getUserInitials = () => {
+    if (!isLoaded || !user)  setLoading(false);
+    const firstName = user.firstName || '';
+    const lastName = user.lastName || '';
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+    } else if (firstName) {
+      return firstName.charAt(0);
+    } else if (user.username) {
+      return user.username.charAt(0);
+    }
+    return 'U';
   };
 
   // Function to get user's email from Clerk
   const getUserEmail = () => {
-    if (!isLoaded || !user) return 'Loading...';
+    if (!isLoaded || !user)  setLoading(false);
     return user.primaryEmailAddress?.emailAddress || 'No email available';
   };
 
   // Function to get user's profile image URL from Clerk
   const getUserImageUrl = () => {
-    if (!isLoaded || !user) return '';
+    if (!isLoaded || !user)  setLoading(false);
     return user.imageUrl || '';
   };
 
   // Show loading screen if user data is not loaded yet
-  if (!isLoaded) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8">
@@ -401,30 +417,19 @@ const Dashboard = () => {
           
           {/* Mobile Quick Actions */}
           <div className="md:hidden py-2 flex justify-between border-t border-indigo-500">
-            <button className="flex-1 inline-flex flex-col items-center px-3 py-1 text-xs font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 rounded transition-colors duration-150">
+            <Link to="/scan-prescription" className="flex-1 inline-flex flex-col items-center px-3 py-1 text-xs font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 rounded transition-colors duration-150">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               </svg>
               <span>Scan</span>
-            </button>
-            <button className="flex-1 inline-flex flex-col items-center px-3 py-1 text-xs font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 rounded transition-colors duration-150">
+            </Link>
+            <Link to="/upload" className="flex-1 inline-flex flex-col items-center px-3 py-1 text-xs font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 rounded transition-colors duration-150">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
               <span>Upload</span>
-            </button>
-            <button className="flex-1 inline-flex flex-col items-center px-3 py-1 text-xs font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 rounded transition-colors duration-150">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>History</span>
-            </button>
-            <button className="flex-1 inline-flex flex-col items-center px-3 py-1 text-xs font-medium text-indigo-100 hover:text-white hover:bg-indigo-500 rounded transition-colors duration-150">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>Search</span>
-            </button>
+            </Link>
+            {/* Add more links as needed */}
           </div>
         </div>
       </header>
@@ -432,7 +437,7 @@ const Dashboard = () => {
       {/* Main Content with Sidebar and Dashboard */}
       <div className="pt-16 md:pt-16 flex">
         {/* Sidebar Navigation - Desktop */}
-        <div className={`bg-white shadow-lg z-20 fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition duration-200 ease-in-out w-64 md:pt-16 pt-0 md:static md:h-screen rounded-tr-xl rounded-br-xl`}>
+        <div className={`bg-white shadow-lg z-20 fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition duration-200 ease-in-out w-64 md:pt-16 pt-0 md:static md:h-screen rounded-tr-xl rounded-br-xl hidden md:flex`}>
           <div className="h-full flex flex-col">
             {/* Close button - mobile only */}
             <div className="md:hidden p-4 flex justify-end">
@@ -448,12 +453,12 @@ const Dashboard = () => {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white font-medium text-lg shadow-md">
-                    JS
+                    {getUserInitials()}
                   </div>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900">Welcome back,</p>
-                  <h3 className="text-lg font-bold text-gray-900">John Smith</h3>
+                  <h3 className="text-lg font-bold text-gray-900">{getUserFullName()}</h3>
                 </div>
               </div>
             </div>
@@ -557,7 +562,7 @@ const Dashboard = () => {
               <div className="p-6 sm:p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                 <div className="sm:flex sm:items-center sm:justify-between">
                   <div>
-                    <h1 className="text-3xl font-extrabold">Welcome back, John</h1>
+                    <h1 className="text-3xl font-extrabold">Welcome back, {getUserFullName()}</h1>
                     <p className="mt-2 text-indigo-100">
                       Here's what's happening with your prescription savings
                     </p>
@@ -577,7 +582,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {/* <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -615,13 +620,13 @@ const Dashboard = () => {
                     <h3 className="text-lg font-bold text-gray-900">72%</h3>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Center Panel Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="md:grid-cols-3 gap-6 mb-8">
               {/* Savings Overview Graph - Spans 2 columns */}
-              <div className="md:col-span-2 bg-white shadow-md rounded-xl p-6">
+              {/* <div className="md:col-span-2 bg-white shadow-md rounded-xl p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">Savings Overview</h2>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
@@ -652,7 +657,7 @@ const Dashboard = () => {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
+              </div> */}
 
               {/* Activity Timeline - Spans 1 column */}
               <div className="bg-white shadow-md rounded-xl p-6">
@@ -1054,7 +1059,7 @@ const Dashboard = () => {
             )}
 
             {/* Dashboard Footer - Stats */}
-            <div className="mt-8 bg-white overflow-hidden shadow rounded-lg">
+            {/* <div className="mt-8 bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <h3 className="text-lg font-medium text-gray-900">Your Savings</h3>
                 <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -1078,7 +1083,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
