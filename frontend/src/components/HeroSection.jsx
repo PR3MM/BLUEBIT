@@ -99,6 +99,7 @@ const HeroSection = () => {
               
               <div className="bg-white rounded-xl shadow-lg p-6 mb-6 transform transition-all hover:shadow-xl">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Upload Your Prescription</h2>
+                <Link to="/scan-prescription">
                 <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors duration-300 cursor-pointer bg-gray-50 hover:bg-indigo-50/50">
                   <div className="mx-auto w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,6 +115,8 @@ const HeroSection = () => {
                     </svg>
                   </button>
                 </div>
+                </Link>
+                <Link to="/scan-prescription">
                 <div className="mt-4 text-center">
                   <div className="flex items-center justify-center">
                     <div className="h-px bg-gray-200 w-full"></div>
@@ -128,6 +131,7 @@ const HeroSection = () => {
                     Take a photo
                   </button>
                 </div>
+                </Link>
               </div>
               
               <div className="text-center text-sm text-gray-500">

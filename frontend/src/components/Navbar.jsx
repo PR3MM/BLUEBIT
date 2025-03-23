@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, UserButton } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,7 +54,7 @@ const Navbar = () => {
                 M
               </span>
             </div>
-            <a href="/">
+            <Link to="/">
               <span
                 className={`font-bold text-xl ${
                   isScrolled ? 'text-gray-800' : 'text-indigo-700'
@@ -62,23 +62,23 @@ const Navbar = () => {
               >
                 MediScanAI
               </span>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop menu */}
           <div className="hidden md:flex space-x-8">
             {['Features', 'How It Works', 'Benefits'].map((item) => (
-              <a
+              <Link
                 key={item}
-                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
-                className={
+                to={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                className={`font-medium transition duration-300 ease-in-out ${
                   isScrolled
-                    ? 'font-medium text-gray-700 hover:text-indigo-600 transition'
-                    : 'font-medium text-indigo-800 hover:text-indigo-600 transition'
-                }
+                    ? 'text-gray-700 hover:text-indigo-600'
+                    : 'text-indigo-800 hover:text-indigo-600'
+                }`}
               >
                 {item}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -86,17 +86,17 @@ const Navbar = () => {
             {isLoaded &&
               (isSignedIn ? (
                 <>
-                  <a
-                    href="/scan-prescription"
-                    className="px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700"
+                  <Link
+                    to="/dashboard"
+                    className="px-4 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"
                   >
-                    New Scan
-                  </a>
+                    Dashboard
+                  </Link>
 
                   {/* Sign Out Button */}
                   <button
                     onClick={handleSignOut}
-                    className="px-4 py-2 rounded-lg transition-all font-medium bg-red-500 text-white hover:bg-red-600"
+                    className="px-4 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium bg-red-500 text-white hover:bg-red-600 shadow-md"
                   >
                     Sign Out
                   </button>
@@ -106,26 +106,22 @@ const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <a
-                    href="/signin"
-                    className={
+                  <Link
+                    to="/signin"
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium ${
                       isScrolled
-                        ? 'px-4 py-2 rounded-lg transition-all font-medium text-gray-700 hover:text-indigo-600'
-                        : 'px-4 py-2 rounded-lg transition-all font-medium text-indigo-800 hover:text-indigo-600'
-                    }
+                        ? 'text-gray-700 hover:text-indigo-600'
+                        : 'text-indigo-800 hover:text-indigo-600'
+                    }`}
                   >
                     Sign In
-                  </a>
-                  <a
-                    href="/signup"
-                    className={
-                      isScrolled
-                        ? 'px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700'
-                        : 'px-4 py-2 rounded-lg transition-all font-medium bg-indigo-600 text-white hover:bg-indigo-700'
-                    }
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium bg-indigo-600 text-white hover:bg-indigo-700 shadow-md`}
                   >
                     Sign Up
-                  </a>
+                  </Link>
                 </>
               ))}
           </div>
@@ -181,48 +177,48 @@ const Navbar = () => {
         <div className="md:hidden bg-white text-gray-800 mt-3 py-4 shadow-lg">
           <div className="flex flex-col space-y-3 px-4">
             {['Features', 'How It Works', 'Benefits'].map((item) => (
-              <a
+              <Link
                 key={item}
-                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
-                className="font-medium py-2 hover:text-indigo-600"
+                to={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                className="font-medium py-2 hover:text-indigo-600 transition duration-300 ease-in-out"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item}
-              </a>
+              </Link>
             ))}
             {isLoaded &&
               (isSignedIn ? (
                 <>
-                  <a
-                    href="/scan-prescription"
-                    className="w-full py-2 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
+                  <Link
+                    to="/scan-prescription"
+                    className="w-full py-2 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-300 ease-in-out"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     New Scan
-                  </a>
+                  </Link>
                   <button
                     onClick={handleSignOut}
-                    className="w-full py-2 text-center bg-red-500 text-white rounded-lg font-medium hover:bg-red-600"
+                    className="w-full py-2 text-center bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition duration-300 ease-in-out"
                   >
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <a
-                    href="/signin"
-                    className="w-full py-2 text-center text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg"
+                  <Link
+                    to="/signin"
+                    className="w-full py-2 text-center text-gray-700 font-medium hover:text-indigo-600 border border-gray-200 rounded-lg transition duration-300 ease-in-out"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign In
-                  </a>
-                  <a
-                    href="/signup"
-                    className="w-full py-3 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition"
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="w-full py-3 text-center bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition duration-300 ease-in-out"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign Up
-                  </a>
+                  </Link>
                 </>
               ))}
           </div>
