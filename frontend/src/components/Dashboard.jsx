@@ -457,7 +457,7 @@ const Dashboard = () => {
             </div>
             
             {/* User Profile Summary */}
-            <div className="px-4 py-5 border-b border-gray-200 z-1">
+            <div className="px-4 py-5 border-b border-gray-200 z-1 ">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white font-medium text-lg shadow-md">
@@ -566,8 +566,8 @@ const Dashboard = () => {
         <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             {/* Welcome Card with Stats */}
-            <div className="mb-8 bg-white shadow-md rounded-xl overflow-hidden">
-              <div className="p-6 sm:p-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+            <div className="mb-8 bg-white  max-sm:mt-12 max-lg:mt-10  shadow-md rounded-xl overflow-hidden">
+              <div className="p-6 sm:p-9 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                 <div className="sm:flex sm:items-center sm:justify-between">
                   <div>
                     <h1 className="text-3xl font-extrabold">Welcome back, {getUserFullName()}</h1>

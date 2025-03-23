@@ -191,7 +191,8 @@ const MedicationIdentificationPage = () => {
         setIdentifiedMedications(found);
       }
       
-      setError(`Note: Using fallback data. ${err.message}`);
+    //   setError(`Note: Using fallback data. ${err.message}`);
+    // console.log(err)
       setIsLoading(false);
     }
   };

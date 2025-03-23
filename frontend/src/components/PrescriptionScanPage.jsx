@@ -12,7 +12,9 @@ const PrescriptionScanPage = () => {
   const [filePreview, setFilePreview] = useState(null);
   const [processingStatus, setProcessingStatus] = useState(null); // null, 'capturing', 'enhancing', 'extracting', 'identifying'
   const [processingProgress, setProcessingProgress] = useState(0);
-  const [extractedText, setExtractedText] = useState('');
+  const [extractedText, setExtractedText] = useState(' ');
+  const [showResults, setShowResults] = useState(false);
+
   
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -136,6 +138,7 @@ const PrescriptionScanPage = () => {
       
       // Save the processed text
       setExtractedText(prescriptionText);
+      setShowResults(true);
       
       // Update progress
       setProcessingStatus('identifying');
@@ -253,7 +256,7 @@ const PrescriptionScanPage = () => {
   
   // Render text extraction results
   const renderResults = () => {
-    if (!extractedText) return null;
+    // if (!extractedText) return null;
     
     return (
       <div className="w-full max-w-xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden border border-indigo-100 mt-8">
@@ -270,9 +273,9 @@ const PrescriptionScanPage = () => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 overflow-auto max-h-64">
             <textarea
               className="text-sm text-gray-700 font-mono w-full h-full min-h-[150px] bg-transparent focus:outline-none resize-none"
-              value={extractedText || ""}
+              value={extractedText }
               onChange={(e) => setExtractedText(e.target.value)}
-              placeholder="No text detected. Please try again with a clearer image or manually enter medications here."
+            //   placeholder="No text detected. Please try again with a clearer image or manually enter medications here."
             />
           </div>
           
@@ -523,7 +526,7 @@ const PrescriptionScanPage = () => {
             renderCamera()
           ) : captureMode === 'upload' ? (
             renderUpload()
-          ) : extractedText ? (
+          ) : showResults ? (
             renderResults()
           ) : (
             /* Capture options */
