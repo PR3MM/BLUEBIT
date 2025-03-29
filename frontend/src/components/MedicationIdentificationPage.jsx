@@ -176,14 +176,16 @@ const MedicationIdentificationPage = () => {
   1. The full medication name
   2. The dosage if specified
   3. A brief description of what the medication is used for
-  4. Exactly two cost-effective alternatives with PRECISE savings percentage (as a number) and EXACT price.
+  4. Exactly two cost-effective GENERIC alternatives with PRECISE savings percentage (as a number) and EXACT price.
   
   IMPORTANT: 
+  - PRIORITIZE GENERIC MEDICINES for all alternatives
   - Always provide exact medication names for alternatives, not general classes
   - Always provide exact numerical savings percentages (e.g., 45, 70)
   - Always provide exact prices with ₹ symbol (e.g., ₹10.99, ₹15.99)
   - Never use terms like "variable", "potentially", or "depending on"
   - If you don't know the exact information, use reasonable estimates based on market data
+  - For each branded medication, ensure that at least one truly generic alternative is provided
   
   Format your response as a JSON array following this structure:
   [
@@ -193,12 +195,12 @@ const MedicationIdentificationPage = () => {
       "description": "Brief description of medication purpose",
       "alternatives": [
         { 
-          "name": "Digoxin (Generic)", 
+          "name": "Generic Alternative 1", 
           "savingsPercent": 70, 
           "price": "₹12.50" 
         },
         { 
-          "name": "Lanoxin (Different Brand)", 
+          "name": "Generic Alternative 2", 
           "savingsPercent": 45, 
           "price": "₹18.75" 
         }
