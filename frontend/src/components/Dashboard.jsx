@@ -4,6 +4,7 @@ import { useUser } from '@clerk/clerk-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
          BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { medicationApi, activityApi, prescriptionApi } from '../services/api';
+import SearchBar from './SearchBar';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -463,7 +464,7 @@ const Dashboard = () => {
             </div>
             
             {/* Search Bar */}
-            <div className="hidden md:block flex-1 max-w-md mx-8">
+            {/* <div className="hidden md:block flex-1 max-w-md mx-8">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-indigo-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -477,7 +478,8 @@ const Dashboard = () => {
                   placeholder="Search medications, pharmacies..."
                 />
               </div>
-            </div>
+            </div> */}
+            <SearchBar />
             
             {/* Quick Actions */}
             <div className="hidden md:flex items-center space-x-4">
