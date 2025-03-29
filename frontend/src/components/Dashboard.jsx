@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
          BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { medicationApi, activityApi, prescriptionApi } from '../services/api';
+import { medicationApi, activityApi, prescriptionApi ,reminderApi} from '../services/api';
 import SearchBar from './SearchBar';
-
+// import { medicationApi, activityApi, prescriptionApi, reminderApi } from '../services/api';
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isLoaded } = useUser();
@@ -378,28 +378,30 @@ const Dashboard = () => {
 
   // Format upcoming reminders
   const formatReminders = () => {
-    if (!allReminders || allReminders.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8 px-4">
-          <div className="rounded-full bg-gray-100 p-3 mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-gray-500 text-center font-medium mb-1">No reminders found</p>
-          <p className="text-gray-400 text-sm text-center">Create reminders from the Manage page</p>
-          <Link to="/reminders" className="mt-4 px-4 py-2 bg-indigo-100 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-200 transition-colors duration-200">
-            Create Reminder
-          </Link>
-        </div>
-      );
-    }
+    // if (!allReminders || allReminders.length === 0) {
+    //   return (
+    //     <div className="flex flex-col items-center justify-center py-8 px-4">
+    //       <div className="rounded-full bg-gray-100 p-3 mb-3">
+    //         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    //         </svg>
+    //       </div>
+    //       <p className="text-gray-500 text-center font-medium mb-1">No reminders found</p>
+    //       <p className="text-gray-400 text-sm text-center">Create reminders from the Manage page</p>
+    //       <Link to="/reminders" className="mt-4 px-4 py-2 bg-indigo-100 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-200 transition-colors duration-200">
+    //         Create Reminder
+    //       </Link>
+    //     </div>
+    //   );
+    // }
 
     // Sort reminders by scheduledTime
     // const sortedReminders = [...allReminders]
     //   .filter(reminder => ['pending', 'snoozed'].includes(reminder.status))
     //   .sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime))
     //   .slice(0, 5); // Show the next 5 reminders
+
+    // const allReminders = [...allReminders]
     
     if (allReminders.length === 0) {
       return (
