@@ -15,6 +15,7 @@ const PrescriptionScanPage = () => {
   const [processingProgress, setProcessingProgress] = useState(0);
   const [extractedText, setExtractedText] = useState(' ');
   const [showResults, setShowResults] = useState(false);
+  const [confidenceScore, setConfidenceScore] = useState(0); // Add confidence score state
 
   
   const fileInputRef = useRef(null);
@@ -106,83 +107,6 @@ const PrescriptionScanPage = () => {
   };
   
   // Process image with Gemini API
-  // const processImage = async (imageData) => {
-  //   try {
-  //     setProcessingStatus('capturing');
-  //     setProcessingProgress(0);
-      
-  //     setProcessingStatus('enhancing');
-  //     setProcessingProgress(25);
-
-  //     // Convert base64 image to binary
-  //     const base64Data = imageData.split(',')[1];
-  //     const binaryData = atob(base64Data);
-  //     const byteArray = new Uint8Array(binaryData.length);
-  //     for (let i = 0; i < binaryData.length; i++) {
-  //       byteArray[i] = binaryData.charCodeAt(i);
-  //     }
-
-  //     setProcessingStatus('extracting');
-  //     setProcessingProgress(50);
-
-  //     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  //     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         contents: [{
-  //           parts: [
-  //             {
-  //               text: "Extract all text from this prescription image. Focus on medication names, dosages, and instructions. Format the output clearly and maintain the original structure."
-  //             },
-  //             {
-  //               inline_data: {
-  //                 mime_type: "image/png",
-  //                 data: base64Data
-  //               }
-  //             }
-  //           ]
-  //         }]
-  //       })
-  //     });
-
-  //     const data = await response.json();
-      
-  //     if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
-  //       throw new Error('Invalid response from Gemini API');
-  //     }
-
-  //     const prescriptionText = data.candidates[0].content.parts[0].text;
-  //     setProcessingProgress(75);
-
-  //     // Basic text processing to clean up results
-  //     const cleanedText = prescriptionText
-  //       .replace(/\s+/g, ' ')
-  //       .replace(/(\r\n|\n|\r)/gm, '\n')
-  //       .trim();
-
-  //     // Save the processed text
-  //     setExtractedText(cleanedText);
-  //     setShowResults(true);
-
-  //     setProcessingStatus('identifying');
-  //     setProcessingProgress(90);
-
-  //     // Finish up
-  //     setTimeout(() => {
-  //       setProcessingStatus(null);
-  //       setProcessingProgress(100);
-  //     }, 1000);
-
-  //   } catch (error) {
-  //     console.error("Text extraction error:", error);
-  //     alert("Error processing prescription. Please try again.");
-  //     setProcessingStatus(null);
-  //     setProcessingProgress(0);
-  //   }
-  // };
   const processImage = async (imageData) => {
     try {
       setProcessingStatus('capturing');
@@ -207,11 +131,9 @@ const PrescriptionScanPage = () => {
                       "1. Remove any decorative formatting\n" +
                       "2. List medications clearly\n" +
                       "3. Include dosage and frequency\n" +
-                      // "4. Use simple, clean formatting\n" +
                       "5. Remove unnecessary symbols or headers\n" +
-                      // "6. Ensure text is easily readable" +
-                      "Extract all text from this prescription image. Focus on medication names, dosages, and instructions. Format the output clearly and maintain the original structure."
-                      
+                      "Extract all text from this prescription image. Focus on medication names, dosages, and instructions. Format the output clearly and maintain the original structure.\n\n" +
+                      "Also provide a confidence score from 0-100 on how certain you are about the extracted text. Format this at the end as: [CONFIDENCE_SCORE:X]"
               },
               {
                 inline_data: {
@@ -232,8 +154,19 @@ const PrescriptionScanPage = () => {
   
       const prescriptionText = data.candidates[0].content.parts[0].text;
   
+      // Extract confidence score if available
+      let cleanedText = prescriptionText;
+      let score = 75; // Default confidence score
+      
+      const confidenceMatch = prescriptionText.match(/\[CONFIDENCE_SCORE:(\d+)\]/);
+      if (confidenceMatch && confidenceMatch[1]) {
+        score = parseInt(confidenceMatch[1]);
+        // Remove the confidence score from the text
+        cleanedText = prescriptionText.replace(/\[CONFIDENCE_SCORE:\d+\]/, '');
+      }
+      
       // Advanced text cleaning
-      const cleanedText = prescriptionText
+      cleanedText = cleanedText
         .replace(/\*+/g, '')           // Remove asterisks
         .replace(/^#+/gm, '')           // Remove header symbols
         .replace(/^\s*\d+\.\s*/gm, '')  // Remove numbered list markers
@@ -242,8 +175,9 @@ const PrescriptionScanPage = () => {
         .replace(/([a-zA-Z])\s*:\s*/g, '$1: ')  // Standardize colons
         .trim();
   
-      // Save the processed text
+      // Save the processed text and confidence score
       setExtractedText(cleanedText);
+      setConfidenceScore(score);
       setShowResults(true);
   
       setProcessingStatus('identifying');
@@ -262,6 +196,7 @@ const PrescriptionScanPage = () => {
       setProcessingProgress(0);
     }
   };
+  
   // Cancel the current capture mode
   const cancelCapture = () => {
     if (captureMode === 'camera' && streamRef.current) {
@@ -350,6 +285,19 @@ const PrescriptionScanPage = () => {
     </div>
   );
   
+  // Get confidence level color based on score
+  const getConfidenceColor = (score) => {
+    if (score >= 85) return 'bg-green-100 text-green-800';
+    if (score >= 70) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  const getConfidenceLabel = (score) => {
+    if (score >= 85) return 'High';
+    if (score >= 70) return 'Medium';
+    return 'Low';
+  };
+  
   // Render text extraction results
   const renderResults = () => {
     // if (!extractedText) return null;
@@ -361,17 +309,21 @@ const PrescriptionScanPage = () => {
             <h3 className="text-xl font-semibold text-gray-900">
               Extracted Prescription Text
             </h3>
-            <div className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
-              Analysis Complete
+            <div className="flex items-center">
+              <div className={`mr-2 text-xs px-3 py-1 rounded-full font-medium ${getConfidenceColor(confidenceScore)}`}>
+                {getConfidenceLabel(confidenceScore)} Confidence
+              </div>
+              <div className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full font-medium">
+                Analysis Complete
+              </div>
             </div>
           </div>
           
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 overflow-auto max-h-64">
             <textarea
               className="text-sm text-gray-700 font-mono w-full h-full min-h-[150px] bg-transparent focus:outline-none resize-none"
-              value={extractedText }
+              value={extractedText}
               onChange={(e) => setExtractedText(e.target.value)}
-            //   placeholder="No text detected. Please try again with a clearer image or manually enter medications here."
             />
           </div>
           
@@ -381,9 +333,20 @@ const PrescriptionScanPage = () => {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
-            <p className="ml-2 text-sm text-gray-600">
-              You can review and edit the extracted text before proceeding. Add or modify medications as needed.
-            </p>
+            <div className="ml-2">
+              <p className="text-sm text-gray-600">
+                You can review and edit the extracted text before proceeding. Add or modify medications as needed.
+              </p>
+              <div className="mt-2 flex items-center">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="h-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600" 
+                    style={{ width: `${confidenceScore}%` }}
+                  ></div>
+                </div>
+                <span className="ml-2 text-xs font-medium text-gray-700">{confidenceScore}%</span>
+              </div>
+            </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -399,7 +362,7 @@ const PrescriptionScanPage = () => {
             <button 
               onClick={() => {
                 // Navigate to medications identification page with the extracted text
-                navigate('/medications', { state: { extractedText } });
+                navigate('/medications', { state: { extractedText, confidenceScore } });
               }}
               className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md font-medium flex-1 flex justify-center items-center"
             >
@@ -777,4 +740,4 @@ const PrescriptionScanPage = () => {
   );
 };
 
-export default PrescriptionScanPage; 
+export default PrescriptionScanPage;

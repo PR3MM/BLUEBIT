@@ -76,36 +76,47 @@ const MedicationDetailsPage = () => {
         </div>
         
         {/* Medication Header */}
-        <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-8">
-          <div className="border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-8">
-            <div className="flex items-start">
-              <div className="p-3 bg-indigo-100 rounded-lg mr-5">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                  {medicationDetails?.name || medicationName}
-                </h1>
-                {medicationDetails?.category && (
-                  <div className="flex mb-3">
-                    <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium">
-                      {medicationDetails.category}
-                    </span>
-                  </div>
-                )}
-                {medicationDetails?.factBox?.therapeutic_class || medicationDetails?.factBox?.["therapeutic class"] && (
-                  <div className="flex mb-3">
-                    <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium ml-2">
-                      {medicationDetails?.factBox?.therapeutic_class || medicationDetails?.factBox?.["therapeutic class"]}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        {/* Medication Header */}
+<div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-8">
+  <div className="border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-8">
+    <div className="flex items-start justify-between">
+      <div className="flex items-start">
+        <div className="p-3 bg-indigo-100 rounded-lg mr-5">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
         </div>
+        <div>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+            {medicationDetails?.name || medicationName}
+          </h1>
+          {medicationDetails?.category && (
+            <div className="flex mb-3">
+              <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-medium">
+                {medicationDetails.category}
+              </span>
+            </div>
+          )}
+          {medicationDetails?.factBox?.therapeutic_class || medicationDetails?.factBox?.["therapeutic class"] && (
+            <div className="flex mb-3">
+              <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium ml-2">
+                {medicationDetails?.factBox?.therapeutic_class || medicationDetails?.factBox?.["therapeutic class"]}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+      <a 
+        href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(medicationDetails?.name || medicationName)}`} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="bg-indigo-600 text-white text-center w-32 px-5 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition"
+      >
+        Buy Now
+      </a>
+    </div>
+  </div>
+</div>
   
         {/* Medication Details */}
         <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-8">
