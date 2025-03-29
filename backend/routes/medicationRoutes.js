@@ -2,14 +2,51 @@ const express = require('express');
 const router = express.Router();
 const Medication = require('../models/Medication');
 const Activity = require('../models/Activity');
+const mongoose = require('mongoose');
 
 // Get all medications for a user
 router.get('/', async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming authentication middleware sets req.user
-    const medications = await Medication.find({ user: userId });
+    // Use userId from query parameter if available (from email or id)
+    const userId = req.query.userId || (req.user && req.user._id);
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    console.log('Fetching medications for userId:', userId);
+    
+    // Check if userId looks like an email
+    const isEmail = userId.includes('@');
+    
+    // Build the query based on userId type
+    let query = {};
+    if (isEmail) {
+      // If it's an email, only search in userId field
+      query = { userId: userId };
+    } else {
+      // Otherwise try both fields
+      try {
+        const objectId = new mongoose.Types.ObjectId(userId);
+        query = { 
+          $or: [
+            { userId: userId },
+            { user: objectId }
+          ]
+        };
+      } catch (e) {
+        // If conversion fails, just use string comparison
+        query = { userId: userId };
+      }
+    }
+    
+    console.log('Medication query:', JSON.stringify(query));
+    const medications = await Medication.find(query);
+    console.log(`Found ${medications.length} medications`);
+    
     res.json(medications);
   } catch (error) {
+    console.error('Error fetching medications:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -33,23 +70,56 @@ router.get('/:id', async (req, res) => {
 // Create a new medication
 router.post('/', async (req, res) => {
   try {
-    const medication = new Medication({
-      ...req.body,
-      user: req.user._id,
-    });
+    // Get user ID from request body or from authenticated user
+    const userId = req.body.userId || (req.user && req.user._id);
     
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    
+    // Check if userId is a valid ObjectId or just a string (like email)
+    const isValidObjectId = (id) => {
+      try {
+        return new mongoose.Types.ObjectId(id).toString() === id;
+      } catch (e) {
+        return false;
+      }
+    };
+    
+    // Create medication with appropriate user reference
+    const medicationData = {
+      ...req.body,
+      userId: userId // Always store as string
+    };
+    
+    // Only set 'user' field if it's a valid ObjectId
+    if (isValidObjectId(userId)) {
+      medicationData.user = userId;
+    } else {
+      // If it's not a valid ObjectId (e.g., an email), don't include the user field
+      medicationData.user = undefined;
+    }
+    
+    const medication = new Medication(medicationData);
     const savedMedication = await medication.save();
     
-    // Create activity log
-    await Activity.create({
-      user: req.user._id,
-      type: 'medication_added',
-      medication: savedMedication._id,
-      details: { name: savedMedication.name },
-    });
+    // Create activity log (if we have Activity model)
+    try {
+      await Activity.create({
+        userId: userId, // Store as string
+        user: isValidObjectId(userId) ? userId : undefined, // Only set if valid ObjectId
+        type: 'medication_added',
+        medication: savedMedication._id,
+        details: { name: savedMedication.name },
+      });
+    } catch (activityError) {
+      console.error('Error creating activity log:', activityError);
+      // Don't fail if activity creation fails
+    }
     
     res.status(201).json(savedMedication);
   } catch (error) {
+    console.error('Error creating medication:', error);
     res.status(400).json({ message: error.message });
   }
 });
