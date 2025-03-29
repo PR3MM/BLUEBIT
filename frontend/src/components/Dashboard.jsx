@@ -21,6 +21,171 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [reminders, setReminders] = useState([]);
   const [allReminders, setAllReminders] = useState([]);
+  const [recommendedMedicines, setRecommendedMedicines] = useState([]);
+
+
+
+  const generateRecommendationPrompt = (medicines) => `
+    The user has taken the following medicines:
+    ${medicines.map((med) => `- ${med.name}`).join("\n")}
+
+    Your task:
+    1. Identify medicines with **similar usage, function, and effectiveness** as alternatives.
+    2. DO NOT suggest alternative chemical compounds or natural substances.
+    3. Provide **commonly prescribed medicines** that serve the **same purpose** as the given medicines.
+    4. Ensure the alternatives are actual **brand or generic medicines** used in real prescriptions.
+    5. Provide the response in the following JSON format:
+
+    [
+      {
+        "original": "Original Medicine",
+        "alternatives": [
+          {
+            "name": "Alternative Medicine 1",
+            "reason": "Why this alternative is recommended"
+          },
+          {
+            "name": "Alternative Medicine 2",
+            "reason": "Why this alternative is recommended"
+          },
+          {
+            "name": "Alternative Medicine 3",
+            "reason": "Why this alternative is recommended"
+          }
+        ]
+      }
+    ]
+  `;
+
+  // 🔹 Fetch medicine recommendations from Gemini API
+  async function getRecommendations(medicines) {
+    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+    const prompt = generateRecommendationPrompt(medicines);
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 1024,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`API Error: ${errorData.error?.message || "Unknown error"}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw Gemini API Response:", data);
+
+      // Extract text response from Gemini API
+      const geminiText = data.candidates[0]?.content?.parts[0]?.text || "";
+
+      // Find the JSON data in the response (removes unwanted markdown formatting)
+      const jsonMatch = geminiText.match(/\[\s*\{.*\}\s*\]/s);
+      if (!jsonMatch) {
+        throw new Error("Could not parse medication data from API response");
+      }
+
+      // Parse JSON safely
+      const medications = JSON.parse(jsonMatch[0]);
+      console.log("Parsed Recommendations:", medications);
+      return medications;
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      return [];
+    }
+  }
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!isLoaded || !user) return;
+
+      try {
+        setLoading(true);
+
+        // Get auth token
+        let token = "";
+        try {
+          token = user.primaryEmailAddress?.emailAddress || user.id;
+        } catch (tokenError) {
+          console.error("Error getting token:", tokenError);
+          token = user.id || "anonymous";
+        }
+
+        // Fetch medications
+        const medicationsData = await medicationApi.getMedications(token);
+        setMedications(medicationsData);
+
+        // Fetch recent activities
+        const activitiesData = await activityApi.getRecentActivities(10, token);
+        setActivities(activitiesData);
+
+        // Fetch recent prescriptions
+        const prescriptionsData = await prescriptionApi.getRecentPrescriptions(3, token);
+        setPrescriptions(prescriptionsData);
+        console.log("Fetched Prescriptions:", prescriptionsData);
+
+        // Extract medicines from prescriptions
+        if (!prescriptionsData || prescriptionsData.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const medicines = prescriptionsData.map((prescription) => ({
+          name: prescription.medication.name,
+        }));
+
+        console.log("Extracted Medicines:", medicines);
+
+        // Fetch recommendations separately
+        fetchRecommendations(medicines);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load your data. Please try again later.");
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [isLoaded, user]);
+
+  // 🔹 Fetch recommendations separately to avoid nesting
+  const fetchRecommendations = async (medicines) => {
+    try {
+      if (!medicines || medicines.length === 0) return;
+      setLoading(true);
+
+      const recommendations = await getRecommendations(medicines);
+      console.log("Fetched Recommendations:", recommendations);
+
+      setRecommendedMedicines(recommendations);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching recommendations:", err);
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Debug: Log changes when `recommendedMedicines` updates
+  useEffect(() => {
+    console.log("Updated Recommended Medicines:", recommendedMedicines);
+  }, [recommendedMedicines]);
   
   // Fetch user's medications, activities, and prescriptions from the database
   useEffect(() => {
@@ -1341,6 +1506,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
               
               {/* Stats & Quick Actions */}
               <div className="md:col-span-4">
@@ -1426,6 +1592,38 @@ const Dashboard = () => {
               </div>
             </div>
             {/* End of Dashboard grid */}
+
+            {recommendedMedicines.length > 0 && (
+  <div className="p-6 bg-white border-t border-gray-200 rounded-lg shadow-md mt-4">
+    <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16l-4-4m0 0l4-4m-4 4h16" />
+      </svg>
+      Recommended Alternatives
+    </h2>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {recommendedMedicines.map((med, index) => (
+        <div key={index} className="bg-gray-50 p-4 border border-gray-200 rounded-lg shadow-sm">
+          <h3 className="text-md font-semibold text-gray-900 mb-2">{med.original}</h3>
+          <ul className="space-y-2">
+            {med.alternatives.map((alt, i) => (
+              <li key={i} className="flex items-start text-sm text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <div>
+                  <span className="font-medium text-gray-900">{alt.name}</span>
+                  <p className="text-xs text-gray-600">{alt.reason}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
             {/* Dashboard Tabs */}
             <div className="mb-6 bg-white rounded-xl shadow-md p-1.5 mt-8 border border-gray-100">
