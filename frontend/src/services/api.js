@@ -283,11 +283,17 @@ export const reminderApi = {
   // Get all reminders for the current user
   getReminders: async (token) => {
     try {
-      const response = await fetch(`${API_URL}/reminders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // If token is provided, include it in both headers and as query parameter
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/reminders?userId=${encodeURIComponent(token)}`, {
+        headers
       });
+      
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -301,17 +307,95 @@ export const reminderApi = {
   // Get today's reminders
   getTodayReminders: async (token) => {
     try {
-      const response = await fetch(`${API_URL}/reminders/today`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      // console.log('Getting today reminders with userId:', token);
+      
+      // If token is provided, include it in both headers and as query parameter
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-      return await response.json();
+      
+      // const url = `${API_URL}/reminders/today?userId=${encodeURIComponent(token)}`;
+      const url = `${API_URL}/reminders/?userId=${encodeURIComponent(token)}`;
+      // console.log('Fetching reminders from URL:', url);
+      
+      const response = await fetch(url, {
+        headers
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response not OK:', response.status, errorText);
+        throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
+      }
+      
+      const data = await response.json();
+      // console.log('Today reminders API response:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching today\'s reminders:', error);
+      throw error;
+    }
+  },
+
+  // Create a new reminder
+  createReminder: async (reminderData, token) => {
+    try {
+      // If token is provided, include it in the headers
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        // Always include userId in the request body for more reliable identification
+        reminderData.userId = token;
+      } else {
+        throw new Error('Token is required to create a reminder');
+      }
+      
+      // Debug log
+      // console.log('Creating reminder with data:', { ...reminderData, userId: token });
+      
+      const response = await fetch(`${API_URL}/reminders`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(reminderData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create reminder');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating reminder:', error);
+      throw error;
+    }
+  },
+  
+  // Update an existing reminder
+  updateReminder: async (id, reminderData, token) => {
+    try {
+      const response = await fetch(`${API_URL}/reminders/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(reminderData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update reminder');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Error updating reminder with ID ${id}:`, error);
       throw error;
     }
   },
@@ -319,11 +403,16 @@ export const reminderApi = {
   // Mark a reminder as completed
   completeReminder: async (id, token) => {
     try {
-      const response = await fetch(`${API_URL}/reminders/${id}/complete`, {
+      // If token is provided, include it in both headers and as query parameter
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/reminders/${id}/complete?userId=${encodeURIComponent(token)}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers
       });
       
       if (!response.ok) {
@@ -341,12 +430,18 @@ export const reminderApi = {
   // Snooze a reminder
   snoozeReminder: async (id, snoozeDuration, token) => {
     try {
-      const response = await fetch(`${API_URL}/reminders/${id}/snooze`, {
+      // If token is provided, include it in both headers and as query parameter
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/reminders/${id}/snooze?userId=${encodeURIComponent(token)}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({ snoozeDuration }),
       });
       
@@ -358,6 +453,33 @@ export const reminderApi = {
       return await response.json();
     } catch (error) {
       console.error(`Error snoozing reminder with ID ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  // Delete a reminder
+  deleteReminder: async (id, token) => {
+    try {
+      // If token is provided, include it in both headers and as query parameter
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/reminders/${id}?userId=${encodeURIComponent(token)}`, {
+        method: 'DELETE',
+        headers
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete reminder');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Error deleting reminder with ID ${id}:`, error);
       throw error;
     }
   }

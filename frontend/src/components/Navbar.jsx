@@ -95,6 +95,13 @@ const Navbar = () => {
                     Dashboard
                   </Link>
 
+                  <Link
+                    to="/reminders"
+                    className="px-4 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium bg-green-600 text-white hover:bg-green-700 shadow-md"
+                  >
+                    Reminders
+                  </Link>
+
                   {/* Sign Out Button */}
                   <button
                     onClick={handleSignOut}
@@ -200,6 +207,13 @@ const Navbar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     New Scan
+                  </Link>
+                  <Link
+                    to="/reminders"
+                    className="w-full py-2 text-center bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition duration-300 ease-in-out"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Reminders
                   </Link>
                   <button
                     onClick={handleSignOut}
