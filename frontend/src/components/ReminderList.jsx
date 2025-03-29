@@ -144,9 +144,9 @@ const ReminderList = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Medication Reminders</h2>
+    <div className="bg-white rounded-lg shadow ">
+      <div className="p-4 border-b flex justify-between items-center ">
+        <h2 className="text-xl font-semibold ">Medication Reminders</h2>
         <button
           onClick={() => {
             setEditingReminder(null);
