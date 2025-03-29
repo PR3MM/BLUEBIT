@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
          BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { medicationApi, activityApi, prescriptionApi } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -11,36 +12,83 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [medications, setMedications] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [error, setError] = useState(null);
   
-  // Mock data for the dashboard
-  const savedMedications = [
+  // Fetch user's medications, activities, and prescriptions from the database
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!isLoaded || !user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Get auth token - use a simpler direct approach
+        let token = '';
+        
+        try {
+          // Try different ways to get the token from Clerk
+          token = user.primaryEmailAddress?.emailAddress || user.id;
+        } catch (tokenError) {
+          console.error('Error getting token:', tokenError);
+          token = user.id || 'anonymous';
+        }
+        
+        // Fetch medications
+        const medicationsData = await medicationApi.getMedications(token);
+        setMedications(medicationsData);
+        
+        // Fetch recent activities
+        const activitiesData = await activityApi.getRecentActivities(10, token);
+        setActivities(activitiesData);
+        
+        // Fetch recent prescriptions
+        const prescriptionsData = await prescriptionApi.getRecentPrescriptions(3, token);
+        setPrescriptions(prescriptionsData);
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError('Failed to load your data. Please try again later.');
+        setLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [isLoaded, user]);
+  
+  // Mock data for the dashboard - will be replaced with real data
+  const medicationReminders = [
     {
-      id: 1,
-      originalMed: 'Lipitor 20mg',
-      date: '2023-11-15',
-      alternatives: [
-        { name: 'Atorvastatin 20mg', savings: 85, provider: 'GenericPharm' },
-        { name: 'Atorvastatin 20mg', savings: 82, provider: 'ValueMeds' }
-      ]
+      id: 301,
+      medication: 'Lisinopril 10mg',
+      time: '8:00 AM',
+      dosage: '1 tablet',
+      status: 'taken'
     },
     {
-      id: 2,
-      originalMed: 'Advair Diskus 250/50',
-      date: '2023-10-28',
-      alternatives: [
-        { name: 'Wixela Inhub 250/50', savings: 65, provider: 'RespiCare' },
-        { name: 'Fluticasone/Salmeterol', savings: 60, provider: 'GenericPharm' }
-      ]
+      id: 302,
+      medication: 'Metformin 500mg',
+      time: '8:00 AM',
+      dosage: '1 tablet',
+      status: 'taken'
     },
     {
-      id: 3,
-      originalMed: 'Synthroid 100mcg',
-      date: '2023-10-02',
-      alternatives: [
-        { name: 'Levothyroxine 100mcg', savings: 70, provider: 'ValueMeds' },
-        { name: 'Levothyroxine 100mcg', savings: 68, provider: 'MediSave' }
-      ]
+      id: 303,
+      medication: 'Metformin 500mg',
+      time: '6:00 PM',
+      dosage: '1 tablet',
+      status: 'upcoming'
+    },
+    {
+      id: 304,
+      medication: 'Atorvastatin 20mg',
+      time: '9:00 PM',
+      dosage: '1 tablet',
+      status: 'upcoming'
     }
   ];
   
@@ -66,22 +114,6 @@ const Dashboard = () => {
       status: 'Analyzed',
       medications: ['Synthroid 100mcg']
     }
-  ];
-
-  // Mock data for new components
-  const savingsData = [
-    { month: 'Jan', savings: 45 },
-    { month: 'Feb', savings: 85 },
-    { month: 'Mar', savings: 120 },
-    { month: 'Apr', savings: 178 },
-    { month: 'May', savings: 156 },
-    { month: 'Jun', savings: 210 },
-    { month: 'Jul', savings: 248 },
-    { month: 'Aug', savings: 320 },
-    { month: 'Sep', savings: 265 },
-    { month: 'Oct', savings: 312 },
-    { month: 'Nov', savings: 352 },
-    { month: 'Dec', savings: 421 },
   ];
 
   const recentPrescriptions = [
@@ -114,70 +146,116 @@ const Dashboard = () => {
     }
   ];
 
-  const medicationReminders = [
-    {
-      id: 301,
-      medication: 'Lisinopril 10mg',
-      time: '8:00 AM',
-      dosage: '1 tablet',
-      status: 'taken'
-    },
-    {
-      id: 302,
-      medication: 'Metformin 500mg',
-      time: '8:00 AM',
-      dosage: '1 tablet',
-      status: 'taken'
-    },
-    {
-      id: 303,
-      medication: 'Metformin 500mg',
-      time: '6:00 PM',
-      dosage: '1 tablet',
-      status: 'upcoming'
-    },
-    {
-      id: 304,
-      medication: 'Atorvastatin 20mg',
-      time: '9:00 PM',
-      dosage: '1 tablet',
-      status: 'upcoming'
-    }
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  
+  // Mock data for new components
+  const savingsData = [
+    { month: 'Jan', savings: 45 },
+    { month: 'Feb', savings: 85 },
+    { month: 'Mar', savings: 120 },
+    { month: 'Apr', savings: 178 },
+    { month: 'May', savings: 156 },
+    { month: 'Jun', savings: 210 },
+    { month: 'Jul', savings: 248 },
+    { month: 'Aug', savings: 320 },
+    { month: 'Sep', savings: 265 },
+    { month: 'Oct', savings: 312 },
+    { month: 'Nov', savings: 352 },
+    { month: 'Dec', savings: 421 },
   ];
 
-  const activityTimeline = [
+  // Mock activity timeline data if no real activities are available
+  const mockActivityTimeline = [
     {
       id: 401,
       type: 'scan',
-      title: 'Scanned new prescription',
-      time: '2 hours ago',
-      description: 'You scanned a prescription for Lisinopril 10mg'
+      title: 'Prescription Scanned',
+      description: 'You scanned a new prescription from Dr. Sarah Johnson',
+      time: '2 hours ago'
     },
     {
       id: 402,
       type: 'savings',
-      title: 'Found savings opportunity',
-      time: '1 day ago',
-      description: 'Save 65% on Atorvastatin 20mg at GenericPharm'
+      title: 'Savings Alert',
+      description: 'Save 65% by switching Lipitor to generic alternative',
+      time: '1 day ago'
     },
     {
       id: 403,
       type: 'reminder',
-      title: 'New medication reminder set',
-      time: '2 days ago',
-      description: 'Daily reminder for Metformin 500mg at 8:00 AM and 6:00 PM'
+      title: 'Medication Reminder',
+      description: 'Time to take your Metformin 500mg',
+      time: '2 days ago'
     },
     {
       id: 404,
       type: 'refill',
-      title: 'Prescription refilled',
-      time: '1 week ago',
-      description: 'Refilled Metformin 500mg at CVS Pharmacy'
+      title: 'Refill Needed',
+      description: 'Your Lisinopril prescription needs to be refilled',
+      time: '3 days ago'
     }
   ];
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  // Function to format saved medications from the database
+  const formatMedications = () => {
+    if (!medications || medications.length === 0) {
+      return [];
+    }
+    
+    return medications.map(med => ({
+      id: med._id,
+      originalMed: `${med.name} ${med.dosage}`,
+      date: med.createdAt,
+      description: med.instructions,
+      frequency: med.frequency,
+      timeOfDay: med.timeOfDay.join(', '),
+      active: med.active
+    }));
+  };
   
+  // Format activities for the timeline
+  const formatActivities = () => {
+    if (!activities || activities.length === 0) {
+      return [];
+    }
+    
+    return activities.map(activity => {
+      let activityDetails = {
+        id: activity._id,
+        time: new Date(activity.timestamp).toLocaleString(),
+      };
+      
+      switch (activity.type) {
+        case 'medication_added':
+          activityDetails.type = 'addition';
+          activityDetails.title = 'Added new medication';
+          activityDetails.description = `Added ${activity.details?.name || 'a medication'} to your list`;
+          break;
+        case 'medication_modified':
+          activityDetails.type = 'update';
+          activityDetails.title = 'Updated medication';
+          activityDetails.description = `Updated ${activity.details?.name || 'a medication'} details`;
+          break;
+        case 'medication_deleted':
+          activityDetails.type = 'deletion';
+          activityDetails.title = 'Removed medication';
+          activityDetails.description = `Removed ${activity.details?.name || 'a medication'} from your list`;
+          break;
+        case 'medication_taken':
+          activityDetails.type = 'taken';
+          activityDetails.title = 'Medication taken';
+          activityDetails.description = `Took your ${activity.medication?.name || 'medication'}`;
+          break;
+        default:
+          activityDetails.type = 'scan';
+          activityDetails.title = 'Scanned prescription';
+          activityDetails.description = 'Processed a prescription scan';
+      }
+      
+      return activityDetails;
+    });
+  };
+
   // Function to get user's full name from Clerk
   const getUserFullName = () => {
     if (!isLoaded || !user)  setLoading(false);
@@ -209,6 +287,36 @@ const Dashboard = () => {
   const getUserImageUrl = () => {
     if (!isLoaded || !user)  setLoading(false);
     return user.imageUrl || '';
+  };
+
+  // Now that all functions are defined, create the activityTimeline
+  const activityTimeline = activities.length > 0 ? formatActivities() : mockActivityTimeline;
+
+  // Function to format prescriptions from the database
+  const formatPrescriptions = () => {
+    if (!prescriptions || prescriptions.length === 0) {
+      return [];
+    }
+    
+    return prescriptions.map(prescription => ({
+      id: prescription._id,
+      name: prescription.medication?.name || 'Unknown Medication',
+      doctor: prescription.doctor || 'Unknown Doctor',
+      date: prescription.prescribedDate || prescription.createdAt,
+      refillsRemaining: prescription.refills?.remaining || 0,
+      nextRefill: calculateNextRefillDate(prescription.prescribedDate || prescription.createdAt),
+      pharmacy: prescription.pharmacy || 'Not specified'
+    }));
+  };
+  
+  // Helper function to calculate next refill date (typically 30 days after prescription date)
+  const calculateNextRefillDate = (date) => {
+    if (!date) return new Date();
+    
+    const prescriptionDate = new Date(date);
+    const nextRefillDate = new Date(prescriptionDate);
+    nextRefillDate.setDate(prescriptionDate.getDate() + 30);
+    return nextRefillDate;
   };
 
   // Show loading screen if user data is not loaded yet
@@ -247,6 +355,79 @@ const Dashboard = () => {
       </div>
     );
   }
+  
+  // Handle prescription refill
+  const handleRefill = async (prescriptionId) => {
+    if (!isLoaded || !user) return;
+    
+    try {
+      // Get token
+      const token = user.primaryEmailAddress?.emailAddress || user.id;
+      
+      // Call the refill API
+      await prescriptionApi.refillPrescription(prescriptionId, token);
+      
+      // Refresh prescriptions data
+      const updatedPrescriptions = await prescriptionApi.getRecentPrescriptions(3, token);
+      setPrescriptions(updatedPrescriptions);
+      
+      // Show success message (could add a toast notification here)
+      console.log("Prescription refilled successfully");
+    } catch (error) {
+      console.error("Error refilling prescription:", error);
+      // Show error message
+    }
+  };
+  
+  // Function to create a test prescription (for development testing)
+  const createTestPrescription = async () => {
+    if (!isLoaded || !user) return;
+    
+    try {
+      // Get token
+      const token = user.primaryEmailAddress?.emailAddress || user.id;
+      
+      // First create a medication
+      const medicationData = {
+        name: "Test Medication " + Date.now(),
+        dosage: "10mg",
+        frequency: "daily",
+        timeOfDay: ["morning"],
+        startDate: new Date(),
+        instructions: "Take with food",
+        active: true
+      };
+      
+      const savedMedication = await medicationApi.createMedication(medicationData, token);
+      console.log("Created test medication:", savedMedication);
+      
+      // Then create a prescription
+      const prescriptionData = {
+        medication: savedMedication._id,
+        doctor: "Dr. Test Doctor",
+        prescribedDate: new Date(),
+        refills: {
+          total: 3,
+          remaining: 3
+        },
+        pharmacy: "Test Pharmacy",
+        notes: "Test prescription created from dashboard",
+        status: "active"
+      };
+      
+      const savedPrescription = await prescriptionApi.createPrescription(prescriptionData, token);
+      console.log("Created test prescription:", savedPrescription);
+      
+      // Refresh prescription data
+      const updatedPrescriptions = await prescriptionApi.getRecentPrescriptions(3, token);
+      setPrescriptions(updatedPrescriptions);
+      
+      alert("Test prescription created successfully!");
+    } catch (error) {
+      console.error("Error creating test prescription:", error);
+      alert("Error creating test prescription: " + error.message);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -668,7 +849,7 @@ const Dashboard = () => {
               </div> */}
 
               {/* Activity Timeline - Spans 1 column */}
-              <div className="bg-white shadow-md rounded-xl p-6">
+              {/* <div className="bg-white shadow-md rounded-xl p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
                   <button className="text-sm text-indigo-600 hover:text-indigo-500">View all</button>
@@ -714,126 +895,255 @@ const Dashboard = () => {
                     ))}
                   </ul>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Recent Prescriptions */}
             <div className="mb-8 bg-white shadow-md rounded-xl p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-bold text-gray-900">Recent Prescriptions</h2>
-                <button className="text-sm text-indigo-600 hover:text-indigo-500">View all</button>
+                <div className="flex space-x-2">
+                  <button className="text-sm text-indigo-600 hover:text-indigo-500">View all</button>
+                  {process.env.NODE_ENV === 'development' && (
+                    <button 
+                      onClick={createTestPrescription}
+                      className="text-sm bg-indigo-100 text-indigo-600 hover:bg-indigo-200 px-2 py-1 rounded"
+                    >
+                      Create Test
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <div className="inline-block min-w-full align-middle">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {recentPrescriptions.map((prescription) => (
-                      <div key={prescription.id} className="border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
-                        <div className="p-4">
-                          <div className="flex justify-between items-start">
-                            <h3 className="text-lg font-semibold text-gray-900">{prescription.name}</h3>
-                            <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                              {prescription.refillsRemaining} refills left
-                            </span>
-                          </div>
-                          <div className="mt-1 text-sm text-gray-500">Prescribed by {prescription.doctor}</div>
-                          <div className="mt-3 space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">Prescribed:</span>
-                              <span className="font-medium text-gray-900">{new Date(prescription.date).toLocaleDateString()}</span>
+                  {loading ? (
+                    <div className="p-6 text-center">
+                      <div className="animate-spin h-8 w-8 border-4 border-indigo-500 rounded-full border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading your prescriptions...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="p-6 text-center">
+                      <div className="rounded-full bg-red-100 p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-800 font-medium mb-2">{error}</p>
+                      <button 
+                        onClick={() => window.location.reload()}
+                        className="text-indigo-600 font-medium hover:text-indigo-800"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : formatPrescriptions().length === 0 ? (
+                    <div className="p-8 text-center">
+                      <div className="rounded-full bg-indigo-100 p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">No Prescriptions Found</h4>
+                      <p className="text-gray-600 mb-6">You haven't added any prescriptions yet.</p>
+                      <Link 
+                        to="/scan-prescription" 
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        </svg>
+                        Scan a Prescription
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {formatPrescriptions().map((prescription) => (
+                        <div key={prescription.id} className="border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+                          <div className="p-4">
+                            <div className="flex justify-between items-start">
+                              <h3 className="text-lg font-semibold text-gray-900">{prescription.name}</h3>
+                              <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                {prescription.refillsRemaining} refills left
+                              </span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">Next Refill:</span>
-                              <span className="font-medium text-gray-900">{new Date(prescription.nextRefill).toLocaleDateString()}</span>
+                            <div className="mt-1 text-sm text-gray-500">Prescribed by {prescription.doctor}</div>
+                            <div className="mt-3 space-y-2">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">Prescribed:</span>
+                                <span className="font-medium text-gray-900">{new Date(prescription.date).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">Next Refill:</span>
+                                <span className="font-medium text-gray-900">{new Date(prescription.nextRefill).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">Pharmacy:</span>
+                                <span className="font-medium text-gray-900">{prescription.pharmacy}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">Pharmacy:</span>
-                              <span className="font-medium text-gray-900">{prescription.pharmacy}</span>
+                            <div className="mt-4 grid grid-cols-2 gap-2">
+                              <button 
+                                onClick={() => handleRefill(prescription.id)}
+                                className="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Refill
+                              </button>
+                              <button className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Details
+                              </button>
                             </div>
-                          </div>
-                          <div className="mt-4 grid grid-cols-2 gap-2">
-                            <button className="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                              Refill
-                            </button>
-                            <button className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              Details
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Medication Reminders */}
-            <div className="mb-8 bg-white shadow-md rounded-xl p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-900">Medication Reminders</h2>
-                <button className="inline-flex items-center px-3 py-1.5 border border-indigo-300 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 transition-colors duration-150">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Reminder
-                </button>
+            <div className="mt-8 bg-white shadow-md rounded-xl overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900">Your Medications</h3>
               </div>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white px-3 text-lg font-medium text-gray-900">Today</span>
-                </div>
-              </div>
-              <div className="mt-4 space-y-4">
-                {medicationReminders.map((reminder) => (
-                  <div key={reminder.id} className={`relative flex items-center p-4 rounded-lg border ${
-                    reminder.status === 'taken' ? 'border-green-200 bg-green-50' : 'border-indigo-200 bg-indigo-50'
-                  }`}>
-                    <div className="mr-4">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        reminder.status === 'taken' ? 'bg-green-100' : 'bg-indigo-100'
-                      }`}>
-                        {reminder.status === 'taken' ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className={`text-md font-semibold ${
-                        reminder.status === 'taken' ? 'text-green-800' : 'text-indigo-800'
-                      }`}>
-                        {reminder.medication}
-                      </h4>
-                      <div className="flex items-center mt-1">
-                        <span className={`text-sm ${
-                          reminder.status === 'taken' ? 'text-green-600' : 'text-indigo-600'
-                        }`}>
-                          {reminder.time} • {reminder.dosage}
-                        </span>
-                      </div>
-                    </div>
-                    {reminder.status === 'upcoming' && (
-                      <button className="ml-4 inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Mark as Taken
-                      </button>
-                    )}
+              <div className="divide-y divide-gray-200">
+                {loading ? (
+                  <div className="p-6 text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-indigo-500 rounded-full border-t-transparent mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading your medications...</p>
                   </div>
-                ))}
+                ) : error ? (
+                  <div className="p-6 text-center">
+                    <div className="rounded-full bg-red-100 p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-800 font-medium mb-2">{error}</p>
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="text-indigo-600 font-medium hover:text-indigo-800"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : formatMedications().length === 0 ? (
+                  <div className="p-8 text-center">
+                    <div className="rounded-full bg-indigo-100 p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No Medications Found</h4>
+                    <p className="text-gray-600 mb-6">You haven't added any medications yet.</p>
+                    <Link 
+                      to="/scan-prescription" 
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      </svg>
+                      Scan a Prescription
+                    </Link>
+                  </div>
+                ) : (
+                  formatMedications().map((medication) => (
+                    <div key={medication.id} className="px-6 py-5 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          </svg>
+                        </div>
+                        <div className="ml-4">
+                          <h4 className="text-sm font-bold text-gray-900">{medication.originalMed}</h4>
+                          <p className="text-sm text-gray-500">{medication.frequency} • {medication.timeOfDay}</p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${medication.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {medication.active ? 'Active' : 'Inactive'}
+                        </span>
+                        <button className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
+              {formatMedications().length > 0 && (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <Link 
+                    to="/scan-prescription"
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center justify-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add More Medications
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            <div className="mt-8 bg-white shadow-md rounded-xl overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {loading ? (
+                  <div className="p-6 text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-indigo-500 rounded-full border-t-transparent mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading activity data...</p>
+                  </div>
+                ) : formatActivities().length === 0 ? (
+                  <div className="p-6 text-center">
+                    <p className="text-gray-600">No recent activity</p>
+                  </div>
+                ) : (
+                  formatActivities().slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-900">{activity.title}</h4>
+                            <span className="text-xs text-gray-500">{activity.time}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">{activity.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {formatActivities().length > 5 && (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <a 
+                    href="#"
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center justify-center"
+                  >
+                    View All Activity
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Dashboard Tabs */}
@@ -862,49 +1172,103 @@ const Dashboard = () => {
             {/* Saved Alternatives Tab */}
             {activeTab === 'saved' && (
               <div className="space-y-6">
-                {savedMedications.map((med) => (
-                  <div key={med.id} className="bg-white overflow-hidden shadow-md rounded-xl divide-y divide-gray-200 transition-all duration-300 hover:shadow-lg">
-                    <div className="px-6 py-5 flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{med.originalMed}</h3>
-                        <p className="mt-1 text-sm text-gray-500">Saved on {new Date(med.date).toLocaleDateString()}</p>
-                      </div>
-                      <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        {med.alternatives.length} alternatives
-                      </span>
-                    </div>
-                    <div className="px-6 py-5">
-                      <h4 className="text-sm font-medium text-gray-500 mb-3">Alternative Medications</h4>
-                      <ul className="space-y-4">
-                        {med.alternatives.map((alt, idx) => (
-                          <li key={idx} className="bg-gray-50 rounded-lg p-4 flex justify-between items-center transition-all duration-150 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200">
-                            <div>
-                              <p className="font-medium text-gray-900">{alt.name}</p>
-                              <p className="text-sm text-gray-500">Provider: {alt.provider}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-semibold text-green-600">{alt.savings}% savings</p>
-                              <button className="mt-2 text-sm text-indigo-600 hover:text-indigo-500 inline-flex items-center">
-                                Get Coupon
-                                <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="px-6 py-4 bg-gray-50 flex justify-end">
-                      <button className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                        View Details
-                        <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
+                {loading ? (
+                  <div className="p-6 text-center">
+                    <div className="animate-spin h-8 w-8 border-4 border-indigo-500 rounded-full border-t-transparent mb-3"></div>
+                    <p className="text-gray-600">Loading your saved medications...</p>
                   </div>
-                ))}
+                ) : error ? (
+                  <div className="p-6 text-center bg-white rounded-xl shadow-md">
+                    <div className="rounded-full bg-red-100 p-3 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-800 font-medium mb-2">{error}</p>
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="text-indigo-600 font-medium hover:text-indigo-800"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : formatMedications().length === 0 ? (
+                  <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 p-8 text-center">
+                    <div className="flex justify-center mb-6">
+                      <div className="p-4 bg-indigo-100 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No Medications Found
+                    </h3>
+                    <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+                      You haven't saved any medications yet. Scan a prescription to identify and save medications.
+                    </p>
+                    <Link 
+                      to="/scan-prescription" 
+                      className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg font-medium shadow-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                    >
+                      Scan a Prescription
+                    </Link>
+                  </div>
+                ) : (
+                  formatMedications().map((med) => (
+                    <div key={med.id} className="bg-white overflow-hidden shadow-md rounded-xl divide-y divide-gray-200 transition-all duration-300 hover:shadow-lg">
+                      <div className="px-6 py-5 flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">{med.originalMed}</h3>
+                          <p className="mt-1 text-sm text-gray-500">Added on {new Date(med.date).toLocaleDateString()}</p>
+                        </div>
+                        <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium ${med.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {med.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      <div className="px-6 py-5">
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-gray-500 mb-1">Instructions</h4>
+                          <p className="text-gray-900">{med.description || "No instructions provided"}</p>
+                        </div>
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-gray-500 mb-1">Frequency</h4>
+                          <p className="text-gray-900">{med.frequency} • {med.timeOfDay}</p>
+                        </div>
+                        
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <button className="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Refill
+                          </button>
+                          <button className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                
+                {formatMedications().length > 0 && (
+                  <div className="flex justify-center mt-6">
+                    <Link
+                      to="/scan-prescription"
+                      className="inline-flex items-center px-4 py-2 bg-indigo-50 rounded-md text-indigo-700 hover:bg-indigo-100 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add More Medications
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

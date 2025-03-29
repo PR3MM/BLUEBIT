@@ -47,11 +47,17 @@ export const medicationApi = {
   // Get all medications for the current user
   getMedications: async (token) => {
     try {
-      const response = await fetch(`${API_URL}/medications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // If token is provided, include it in the headers
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/medications?userId=${encodeURIComponent(token)}`, {
+        headers
       });
+      
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -83,12 +89,20 @@ export const medicationApi = {
   // Create a new medication
   createMedication: async (medicationData, token) => {
     try {
+      // If token is provided, include it in the headers
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        // Also include userId in the request body for more reliable identification
+        medicationData.userId = token;
+      }
+      
       const response = await fetch(`${API_URL}/medications`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify(medicationData),
       });
       
@@ -148,6 +162,20 @@ export const medicationApi = {
       console.error(`Error deleting medication with ID ${id}:`, error);
       throw error;
     }
+  },
+
+  // Get medication details by name
+  getMedicationDetails: async (medicationName) => {
+    try {
+      const response = await fetch(`${API_URL}/medicine/medication/${encodeURIComponent(medicationName)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch medication details');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error in getMedicationDetails:', error);
+      throw error;
+    }
   }
 };
 
@@ -174,11 +202,17 @@ export const prescriptionApi = {
   // Get recent prescriptions
   getRecentPrescriptions: async (limit = 5, token) => {
     try {
-      const response = await fetch(`${API_URL}/prescriptions/recent?limit=${limit}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // If token is provided, include it in the headers
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/prescriptions/recent?limit=${limit}&userId=${encodeURIComponent(token)}`, {
+        headers
       });
+      
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -192,12 +226,20 @@ export const prescriptionApi = {
   // Create a new prescription
   createPrescription: async (prescriptionData, token) => {
     try {
+      // If token is provided, include it in the headers
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        // Also include userId in the request body for more reliable identification
+        prescriptionData.userId = token;
+      }
+      
       const response = await fetch(`${API_URL}/prescriptions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify(prescriptionData),
       });
       
@@ -326,11 +368,17 @@ export const activityApi = {
   // Get recent activities
   getRecentActivities: async (limit = 10, token) => {
     try {
-      const response = await fetch(`${API_URL}/activities/recent?limit=${limit}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // If token is provided, include it in the headers
+      const headers = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/activities/recent?limit=${limit}&userId=${encodeURIComponent(token)}`, {
+        headers
       });
+      
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -373,4 +421,4 @@ export default {
   prescriptionApi,
   reminderApi,
   activityApi
-}; 
+};
