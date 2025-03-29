@@ -26,7 +26,8 @@ import MedicationDetailsPage from './components/MedicationDetailsPage'
 
 // Create a HomePage component that combines all landing page sections
 const HomePage = () => (
-  <>
+  <><div className="gtranslate_wrapper">
+
     <HeroSection />
     <FeaturesSection />
     <HowItWorksSection />
@@ -34,6 +35,7 @@ const HomePage = () => (
     <BenefitsSection />
     <TrustSection />
     <CtaSection />
+  </div>
   </>
 );
 

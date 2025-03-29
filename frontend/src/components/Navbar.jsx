@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, UserButton } from '@clerk/clerk-react';
 import { useNavigate, Link } from 'react-router-dom';
+// import GoogleTranslate from '../services/GoogleTranslate.jsx';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -39,7 +40,7 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          {/* Logo */}
+          {/* Logo and Google Translate */}
           <div className="flex items-center">
             <div
               className={`h-8 w-8 rounded-md ${
@@ -63,6 +64,7 @@ const Navbar = () => {
                 MediScanAI
               </span>
             </Link>
+            {/* <GoogleTranslate/> */}
           </div>
 
           {/* Desktop menu */}
@@ -179,7 +181,7 @@ const Navbar = () => {
             {['Features', 'How It Works', 'Benefits'].map((item) => (
               <a 
                 key={item}
-                href ={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
                 className={
                   isScrolled
                     ? 'font-medium text-gray-700 hover:text-indigo-600 transition'
