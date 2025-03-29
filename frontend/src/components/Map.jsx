@@ -1,142 +1,112 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useJsApiLoader, GoogleMap } from '@react-google-maps/api';
-import { ClipLoader } from 'react-spinners';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useAddress } from '../components/context/AddressContext';
 
-const libraries = ['marker'];
+// Fix Leaflet default marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// MapUpdater component to handle map updates
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+  return null;
+}
 
 const Map = () => {
-  const [map, setMap] = useState(null);
-  const [infoWindow, setInfoWindow] = useState(null);
-  const [geocoder, setGeocoder] = useState(null);
+  const [position, setPosition] = useState({ lat: 19.0760, lng: 72.8777 });
+  const [places, setPlaces] = useState([]);
   const [isLocationModalVisible, setLocationModalVisible] = useState(true);
   const { updateAddress, updateCoordinates } = useAddress();
-  const { address, coordinates } = useAddress();
-  
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
 
-  useEffect(() => {
-    const handleFormSubmit = async (event) => {
-      if (!geocoder || !map || !infoWindow) return;
+  const fetchNearbyPlaces = useCallback(async (lat, lng) => {
+    try {
+      const queries = [
+        'pharmacy',
+        'chemist',
+        'drugstore',
+        'medical+store',
+        'medicine+shop'
+      ];
+      
+      const results = await Promise.all(queries.map(async (query) => {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=5&lat=${lat}&lon=${lng}&radius=5000&exclude_place_types=hospital,clinic`
+        );
+        return response.json();
+      }));
 
-      const submittedAddress = event.detail.address;
+      // Flatten results and remove duplicates using Object instead of Map
+      const allPlaces = results.flat();
+      const uniquePlacesObj = allPlaces.reduce((acc, place) => {
+        acc[place.place_id] = place;
+        return acc;
+      }, {});
+      const uniquePlaces = Object.values(uniquePlacesObj);
+      
+      // Filter out results containing "hospital" or "clinic"
+      const filteredPlaces = uniquePlaces.filter(place => 
+        !place.display_name.toLowerCase().includes('hospital') && 
+        !place.display_name.toLowerCase().includes('clinic')
+      );
 
-      geocoder.geocode({ address: submittedAddress }, async (results, status) => {
-        if (status === 'OK' && results[0]) {
-          const position = results[0].geometry.location;
-          const pos = { lat: position.lat(), lng: position.lng() };
-
-          map.setCenter(pos);
-          map.setZoom(15);
-
-          const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-          new AdvancedMarkerElement({
-            map,
-            position: pos,
-            title: submittedAddress,
-            draggable: true,
-          });
-
-          infoWindow.setPosition(pos);
-          infoWindow.setContent(`Address: ${submittedAddress}`);
-          infoWindow.open(map);
-
-          updateCoordinates(pos.lat, pos.lng);
-        } else {
-          infoWindow.setPosition(map.getCenter());
-          infoWindow.setContent('Unable to find location for this address');
-          infoWindow.open(map);
-        }
-      });
-    };
-
-    window.addEventListener('formAddressSubmitted', handleFormSubmit);
-    return () => window.removeEventListener('formAddressSubmitted', handleFormSubmit);
-  }, [geocoder, map, infoWindow, updateCoordinates]);
+      setPlaces(filteredPlaces.map(place => ({
+        id: place.place_id,
+        position: [place.lat, place.lon],
+        name: place.display_name.split(',')[0],
+        address: place.display_name
+      })));
+    } catch (error) {
+      console.error('Error fetching places:', error);
+      setPlaces([]);
+    }
+  }, []);
 
   const handleLocationClick = useCallback(() => {
     setLocationModalVisible(false);
-
-    if (!map || !infoWindow) return;
-
-    if (navigator.geolocation) {
+    if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
-          const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+        async (location) => {
+          const pos = {
+            lat: location.coords.latitude,
+            lng: location.coords.longitude
+          };
+          setPosition(pos);
           
-          new AdvancedMarkerElement({
-            map,
-            position: pos,
-            title: "Your Location",
-          });
-
-          map.setCenter(pos);
-          map.setZoom(15);
-
-          geocoder.geocode({ location: pos }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              const address = results[0].formatted_address;
-              infoWindow.setPosition(pos);
-              infoWindow.setContent(`Address: ${address}`);
-              infoWindow.open(map);
-
-              updateAddress(address);
-              updateCoordinates(pos.lat, pos.lng);
-            } else {
-              infoWindow.setPosition(pos);
-              infoWindow.setContent('Unable to retrieve address');
-              infoWindow.open(map);
-            }
-          });
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json`
+            );
+            const data = await response.json();
+            updateAddress(data.display_name);
+            updateCoordinates(pos.lat, pos.lng);
+            fetchNearbyPlaces(pos.lat, pos.lng);
+          } catch (error) {
+            console.error('Error fetching address:', error);
+          }
         },
         (error) => {
-          infoWindow.setPosition(map.getCenter());
-          infoWindow.setContent("Error: The Geolocation service failed. " + error.message);
-          infoWindow.open(map);
+          console.error('Geolocation error:', error);
           setLocationModalVisible(true);
         }
       );
     } else {
-      infoWindow.setPosition(map.getCenter());
-      infoWindow.setContent("Error: Your browser doesn't support geolocation.");
-      infoWindow.open(map);
       setLocationModalVisible(true);
     }
-  }, [map, infoWindow, geocoder, updateAddress, updateCoordinates]);
+  }, [updateAddress, updateCoordinates, fetchNearbyPlaces]);
 
-  const onMapLoad = useCallback(async (mapInstance) => {
-    setMap(mapInstance);
-    setInfoWindow(new google.maps.InfoWindow());
-    setGeocoder(new google.maps.Geocoder());
-
-    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-    new AdvancedMarkerElement({
-      map: mapInstance,
-      position: { lat: 19.0760, lng: 72.8777 },
-      title: "Mumbai",
-    });
-  }, []);
-
-  const enableLocation = () => {
-    setLocationModalVisible(false);
-    handleLocationClick();
-  };
-
-  const searchManually = () => {
-    setLocationModalVisible(false);
-    alert("Redirecting to manual address search.");
-  };
-
-  const renderLocationButton = useCallback(() => {
-    if (!map) return null;
-
-    return (
+  return (
+    <div className="relative w-full h-full">
       <button
-        className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 px-4 py-2 bg-white rounded-md shadow-md flex items-center"
+        className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] px-4 py-2 bg-white rounded-md shadow-md flex items-center"
         onClick={handleLocationClick}
       >
         <img
@@ -146,49 +116,57 @@ const Map = () => {
         />
         Locate me
       </button>
-    );
-  }, [map, handleLocationClick]);
 
-  if (!isLoaded) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <ClipLoader color="#3498db" loading={true} size={50} />
-      </div>
-    );
-  }
+      <MapContainer
+        center={[position.lat, position.lng]}
+        zoom={15}
+        style={{ height: '100%', width: '100%' }}
+        zoomControl={false}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapUpdater center={[position.lat, position.lng]} />
+        
+        <Marker position={[position.lat, position.lng]}>
+          <Popup>Your Location</Popup>
+        </Marker>
 
-  return (
-    <div className="relative w-full h-full">
-      {renderLocationButton()}
-      <GoogleMap
-        center={{ lat: 19.0760, lng: 72.8777 }}
-        zoom={13}
-        mapContainerStyle={{ height: '100%', width: '100%' }}
-        onLoad={onMapLoad}
-        options={{
-          mapId: import.meta.env.VITE_GOOGLE_MAPS_ID,
-          zoomControl: false,
-          mapTypeControl: false,
-          scaleControl: false,
-          streetViewControl: false,
-          rotateControl: false,
-          fullscreenControl: false,
-        }}
-      />
+        {places.map((place) => (
+          <Marker
+            key={place.id}
+            position={place.position}
+          >
+            <Popup>
+              <div className="max-w-xs">
+                <h3 className="font-bold text-lg">{place.name}</h3>
+                <p className="text-sm text-gray-600 mt-1">{place.address}</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
 
       {isLocationModalVisible && (
-        <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-20 w-11/12 sm:w-96">
+        <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-[1001] w-11/12 sm:w-96">
           <h3 className="text-xl font-semibold mb-4">Location Permission</h3>
           <p className="mb-6">Your browser is not able to access your location. You can either enable it or search for an address manually.</p>
           <div className="flex justify-between">
             <button
-              onClick={enableLocation}
+              onClick={() => {
+                setLocationModalVisible(false);
+                handleLocationClick();
+              }}
               className="px-6 py-2 bg-blue-500 text-white rounded-md"
             >
               Enable Location
             </button>
             <button
-              onClick={searchManually}
+              onClick={() => {
+                setLocationModalVisible(false);
+                alert("Redirecting to manual address search.");
+              }}
               className="px-6 py-2 bg-yellow-500 text-white rounded-md"
             >
               Search Manually
