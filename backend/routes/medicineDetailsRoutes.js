@@ -111,7 +111,7 @@ router.get('/medication/:medicationName', async (req, res) => {
       
       // Extract the text response from Gemini
       const geminiText = data.candidates[0].content.parts[0].text;
-      console.log("Gemini response received :", geminiText);
+      // console.log("Gemini response received :", geminiText);
       
       // Find the JSON data in the response (it might be wrapped in markdown code blocks)
       const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
