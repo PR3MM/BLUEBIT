@@ -21,7 +21,7 @@ import CtaSection from './components/CtaSection'
 import Dashboard from './components/Dashboard'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
 import MedicationIdentificationPage from './components/MedicationIdentificationPage'
-
+import MedicationDetailsPage from './components/MedicationDetailsPage'
 
 
 // Create a HomePage component that combines all landing page sections
@@ -150,6 +150,8 @@ const AppLayout = () => {
           
           <Route path="/medications" element={<MedicationIdentificationPage />} />
           
+          // In your router configuration file
+          <Route path="/medicine/:medicationName" element={<MedicationDetailsPage />} />
           {/* Catch-all route for 404 */}
           <Route 
             path="*" 

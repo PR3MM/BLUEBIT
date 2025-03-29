@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { createWorker } from 'tesseract.js';
 import samplePrescription from '../assets/sample_prescription.png';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const PrescriptionScanPage = () => {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -20,6 +21,9 @@ const PrescriptionScanPage = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
+  
+  // Initialize Gemini API
+  const genAI = new GoogleGenerativeAI("YOUR_GEMINI_API_KEY"); // Replace with your actual API key
   
   // Redirect if not signed in
   React.useEffect(() => {
@@ -101,71 +105,163 @@ const PrescriptionScanPage = () => {
     }
   };
   
-  // Process image with Tesseract OCR
+  // Process image with Gemini API
+  // const processImage = async (imageData) => {
+  //   try {
+  //     setProcessingStatus('capturing');
+  //     setProcessingProgress(0);
+      
+  //     setProcessingStatus('enhancing');
+  //     setProcessingProgress(25);
+
+  //     // Convert base64 image to binary
+  //     const base64Data = imageData.split(',')[1];
+  //     const binaryData = atob(base64Data);
+  //     const byteArray = new Uint8Array(binaryData.length);
+  //     for (let i = 0; i < binaryData.length; i++) {
+  //       byteArray[i] = binaryData.charCodeAt(i);
+  //     }
+
+  //     setProcessingStatus('extracting');
+  //     setProcessingProgress(50);
+
+  //     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  //     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         contents: [{
+  //           parts: [
+  //             {
+  //               text: "Extract all text from this prescription image. Focus on medication names, dosages, and instructions. Format the output clearly and maintain the original structure."
+  //             },
+  //             {
+  //               inline_data: {
+  //                 mime_type: "image/png",
+  //                 data: base64Data
+  //               }
+  //             }
+  //           ]
+  //         }]
+  //       })
+  //     });
+
+  //     const data = await response.json();
+      
+  //     if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+  //       throw new Error('Invalid response from Gemini API');
+  //     }
+
+  //     const prescriptionText = data.candidates[0].content.parts[0].text;
+  //     setProcessingProgress(75);
+
+  //     // Basic text processing to clean up results
+  //     const cleanedText = prescriptionText
+  //       .replace(/\s+/g, ' ')
+  //       .replace(/(\r\n|\n|\r)/gm, '\n')
+  //       .trim();
+
+  //     // Save the processed text
+  //     setExtractedText(cleanedText);
+  //     setShowResults(true);
+
+  //     setProcessingStatus('identifying');
+  //     setProcessingProgress(90);
+
+  //     // Finish up
+  //     setTimeout(() => {
+  //       setProcessingStatus(null);
+  //       setProcessingProgress(100);
+  //     }, 1000);
+
+  //   } catch (error) {
+  //     console.error("Text extraction error:", error);
+  //     alert("Error processing prescription. Please try again.");
+  //     setProcessingStatus(null);
+  //     setProcessingProgress(0);
+  //   }
+  // };
   const processImage = async (imageData) => {
     try {
       setProcessingStatus('capturing');
       setProcessingProgress(0);
       
-      // In Tesseract.js v4, language is specified during worker creation
       setProcessingStatus('enhancing');
       setProcessingProgress(25);
-      
-      // Create worker with language specified directly
-      const worker = await createWorker('eng');
-      
-      // Optional: Set custom parameters for better medical term recognition
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-+()%/mg',
+  
+      // Convert base64 image to binary
+      const base64Data = imageData.split(',')[1];
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                text: "Extract prescription text. Follow these rules:\n" +
+                      "1. Remove any decorative formatting\n" +
+                      "2. List medications clearly\n" +
+                      "3. Include dosage and frequency\n" +
+                      // "4. Use simple, clean formatting\n" +
+                      "5. Remove unnecessary symbols or headers\n" +
+                      // "6. Ensure text is easily readable" +
+                      "Extract all text from this prescription image. Focus on medication names, dosages, and instructions. Format the output clearly and maintain the original structure."
+                      
+              },
+              {
+                inline_data: {
+                  mime_type: "image/png",
+                  data: base64Data
+                }
+              }
+            ]
+          }]
+        })
       });
+  
+      const data = await response.json();
       
-      // Update progress
-      setProcessingStatus('extracting');
-      setProcessingProgress(50);
-      
-      // Recognize text in image
-      const { data } = await worker.recognize(imageData);
-      setProcessingProgress(75);
-      
-      // Process the extracted text
-      let prescriptionText = data.text;
-      
-      // Basic text processing to clean up OCR results
-      prescriptionText = prescriptionText
-        .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
-        .replace(/(\r\n|\n|\r)/gm, '\n') // Normalize line breaks
-        .trim();                         // Remove leading/trailing whitespace
-      
+      if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+        throw new Error('Invalid response from Gemini API');
+      }
+  
+      const prescriptionText = data.candidates[0].content.parts[0].text;
+  
+      // Advanced text cleaning
+      const cleanedText = prescriptionText
+        .replace(/\*+/g, '')           // Remove asterisks
+        .replace(/^#+/gm, '')           // Remove header symbols
+        .replace(/^\s*\d+\.\s*/gm, '')  // Remove numbered list markers
+        .replace(/^\s*-\s*/gm, '')      // Remove bullet points
+        .replace(/\s+/g, ' ')           // Normalize whitespace
+        .replace(/([a-zA-Z])\s*:\s*/g, '$1: ')  // Standardize colons
+        .trim();
+  
       // Save the processed text
-      setExtractedText(prescriptionText);
+      setExtractedText(cleanedText);
       setShowResults(true);
-      
-      // Update progress
+  
       setProcessingStatus('identifying');
       setProcessingProgress(90);
-      
+  
       // Finish up
       setTimeout(() => {
         setProcessingStatus(null);
         setProcessingProgress(100);
-        
-        // Log the extracted text for debugging
-        // console.log("Extracted Prescription Text:", prescriptionText);
-        
-        // Here you would continue with medication identification based on the text
-        // Example: identifyMedications(prescriptionText);
       }, 1000);
-      
-      // Terminate worker when done
-      await worker.terminate();
+  
     } catch (error) {
-    //   console.error("Text extraction error:", error);
+      console.error("Text extraction error:", error);
       alert("Error processing prescription. Please try again.");
       setProcessingStatus(null);
       setProcessingProgress(0);
     }
   };
-  
   // Cancel the current capture mode
   const cancelCapture = () => {
     if (captureMode === 'camera' && streamRef.current) {
@@ -245,7 +341,7 @@ const PrescriptionScanPage = () => {
       
       <p className="text-gray-600 mb-4">
         {processingStatus === 'extracting' 
-          ? 'Using Tesseract OCR to recognize text in your prescription...' 
+          ? 'Using Google Gemini AI to analyze your prescription...' 
           : 'Please wait while we process your prescription...'}
       </p>
       <p className="text-xs text-gray-500 max-w-xs mx-auto">
