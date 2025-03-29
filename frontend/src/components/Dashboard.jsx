@@ -21,7 +21,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [reminders, setReminders] = useState([]);
   const [allReminders, setAllReminders] = useState([]);
-  
+
   // Fetch user's medications, activities, and prescriptions from the database
   useEffect(() => {
     const fetchUserData = async () => {
@@ -1152,7 +1152,13 @@ const Dashboard = () => {
                         {medications.map((med) => (
                           <li key={med._id} className="py-3 flex justify-between items-center hover:bg-gray-50 px-2 rounded-lg transition-colors duration-200">
                             <div>
-                              <div className="font-medium text-gray-800">{med.name} {med.dosage}</div>
+                              <div className="font-medium text-gray-800">{med.name} {med.dosage} <button 
+  onClick={() => navigate(`/medicine/${encodeURIComponent(med.name)}`)}
+  className="px-2 py-1 bg-indigo-600 text-white text-xs rounded-md hover:bg-indigo-700 transition-colors"
+>
+  Learn More
+</button>
+</div>
                               <div className="text-sm text-gray-500">{med.frequency}{med.timeOfDay && med.timeOfDay.length > 0 ? ` • ${med.timeOfDay.join(', ')}` : ''}</div>
                             </div>
                             <div>
@@ -1513,7 +1519,13 @@ const Dashboard = () => {
                       <div key={med._id} className="bg-white overflow-hidden shadow-md rounded-xl divide-y divide-gray-200 transition-all duration-300 hover:shadow-lg">
                         <div className="px-6 py-5 flex justify-between items-center">
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">{formattedMed.originalMed}</h3>
+                            <h3 className="text-lg font-bold text-gray-900">{formattedMed.originalMed} <button 
+  onClick={() => navigate(`/medicine/${encodeURIComponent(formattedMed.originalMed)}`)}
+  className="px-2 py-1 bg-indigo-600 text-white text-xs rounded-md hover:bg-indigo-700 transition-colors"
+>
+  Learn More
+</button>
+</h3>
                             <p className="mt-1 text-sm text-gray-500">Added on {new Date(formattedMed.date).toLocaleDateString()}</p>
                           </div>
                           <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium ${formattedMed.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
