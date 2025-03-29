@@ -19,6 +19,7 @@ import BenefitsSection from './components/BenefitsSection'
 import TrustSection from './components/TrustSection'
 import CtaSection from './components/CtaSection'
 import Dashboard from './components/Dashboard'
+import NearbyPharmacies from './components/NearbyPharmacies'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
 import MedicationIdentificationPage from './components/MedicationIdentificationPage'
 
@@ -135,6 +136,15 @@ const AppLayout = () => {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/nearby-pharmacies" 
+            element={
+              <ProtectedRoute>
+                <NearbyPharmacies />
               </ProtectedRoute>
             } 
           />
