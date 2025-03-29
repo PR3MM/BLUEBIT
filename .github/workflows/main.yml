@@ -1,0 +1,54 @@
+name: Fullstack Dev Runner
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  frontend:
+    name: Start Frontend on Push
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start frontend (Runs `npm run dev`)
+        run: npm run dev & sleep 60
+
+  backend:
+    name: Start Backend on Push
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start backend (Runs `node app.js`)
+        run: node app.js & sleep 60

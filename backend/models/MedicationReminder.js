@@ -5,7 +5,11 @@ const medicationReminderSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+    },
+    userId: {
+      type: String,
+      required: false,
     },
     medication: {
       type: mongoose.Schema.Types.ObjectId,

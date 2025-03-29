@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { medicationApi } from '../services/api';
+import { prescriptionApi } from '../services/api';
 
 const MedicationIdentificationPage = () => {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -11,6 +13,7 @@ const MedicationIdentificationPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [apiKey, setApiKey] = useState(null);
+  const [savingStatus, setSavingStatus] = useState('idle');
 
   // Set API key from environment variable
   useEffect(() => {
@@ -47,6 +50,76 @@ const MedicationIdentificationPage = () => {
     }
   }, [location.state, apiKey]);
 
+  // Function to save medications to MongoDB
+  const saveMedicationsToDatabase = async () => {
+    try {
+      setSavingStatus('saving');
+      
+      // Get auth token - use a simpler direct approach
+      let token = '';
+      
+      if (isSignedIn && user) {
+        try {
+          // Try different ways to get the token from Clerk
+          token = await user.primaryEmailAddress?.emailAddress || user.id;
+        } catch (tokenError) {
+          console.error('Error getting token:', tokenError);
+          token = user.id || 'anonymous';
+        }
+      }
+      
+      // Save each medication to the database
+      for (const med of identifiedMedications) {
+        // Format medication data according to our schema
+        const medicationData = {
+          name: med.name,
+          dosage: med.matchedDosage,
+          frequency: 'daily', // Default, could be improved with AI extraction
+          timeOfDay: ['morning'], // Default, could be improved with AI extraction
+          startDate: new Date(),
+          instructions: med.description,
+          active: true
+        };
+        
+        // Save medication first
+        const savedMedication = await medicationApi.createMedication(medicationData, token);
+        console.log('Saved medication:', savedMedication);
+        
+        // Then create a prescription record linking to this medication
+        const prescriptionData = {
+          medication: savedMedication._id,
+          doctor: 'Dr. ' + (extractedText.match(/Dr\.\s*([A-Za-z\s]+)/i)?.[1] || 'Unknown'),
+          prescribedDate: new Date(),
+          refills: {
+            total: 3, // Default value, could be extracted from prescription text
+            remaining: 3
+          },
+          pharmacy: extractedText.match(/pharmacy:\s*([A-Za-z\s]+)/i)?.[1] || 'Local Pharmacy',
+          notes: 'Automatically created from prescription scan',
+          status: 'active',
+          userId: token // Add userId for email-based identification
+        };
+        
+        // Save the prescription
+        try {
+          const savedPrescription = await prescriptionApi.createPrescription(prescriptionData, token);
+          console.log('Saved prescription:', savedPrescription);
+        } catch (prescError) {
+          console.error('Error saving prescription:', prescError);
+          // Continue even if prescription save fails
+        }
+      }
+      
+      setSavingStatus('success');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving medications:', error);
+      setSavingStatus('error');
+    }
+  };
+
   // Function to identify medications using Gemini API
   const identifyMedications = async (text) => {
     setIsLoading(true);
@@ -60,38 +133,81 @@ const MedicationIdentificationPage = () => {
     //   console.log("Using API key to make request:", apiKey.substring(0, 5) + "...");
       
       // Prepare the prompt for Gemini
+      // const prompt = `
+      //   Analyze the following prescription text and identify medications with their dosages:
+        
+      //   ${text}
+        
+      //   For each identified medication, provide:
+      //   1. The full medication name
+      //   2. The dosage if specified
+      //   3. A brief description of what the medication is used for
+      //   4. At least two cost-effective alternatives with estimated savings percentage and price.
+        
+      //   Format your response as a JSON array following this structure:
+      //   [
+      //     {
+      //       "name": "Medication Name",
+      //       "matchedDosage": "Dosage",
+      //       "description": "Brief description of medication purpose",
+      //       "alternatives": [
+      //         { 
+      //           "name": "Alternative Name (tell exact name of the alternative)", 
+      //           "savingsPercent": 70 (tell exact percent , should be a value or number), 
+      //           "price": "₹10.99 (tell exact price, should be a value or number)" 
+      //         },
+      //         { 
+      //           "name": "Another Alternative Name (tell exact name of the alternative)", 
+      //           "savingsPercent": 45 (tell exact percent , should be a value or number), 
+      //           "price": "₹15.99 (tell exact price , should be a value or number)" 
+      //         }
+      //       ]
+      //     }
+      //   ]
+      // `;
+
+
       const prompt = `
-        Analyze the following prescription text and identify medications with their dosages:
-        
-        ${text}
-        
-        For each identified medication, provide:
-        1. The full medication name
-        2. The dosage if specified
-        3. A brief description of what the medication is used for
-        4. At least two cost-effective alternatives with estimated savings percentage and price.
-        
-        Format your response as a JSON array following this structure:
-        [
-          {
-            "name": "Medication Name",
-            "matchedDosage": "Dosage",
-            "description": "Brief description of medication purpose",
-            "alternatives": [
-              { 
-                "name": "Alternative Name", 
-                "savingsPercent": 70, 
-                "price": "₹10.99" 
-              },
-              { 
-                "name": "Another Alternative", 
-                "savingsPercent": 45, 
-                "price": "₹15.99" 
-              }
-            ]
-          }
-        ]
-      `;
+  Analyze the following prescription text and identify medications with their dosages:
+  
+  ${text}
+  
+  For each identified medication, provide:
+  1. The full medication name
+  2. The dosage if specified
+  3. A brief description of what the medication is used for
+  4. Exactly two cost-effective GENERIC alternatives with PRECISE savings percentage (as a number) and EXACT price.
+  
+  IMPORTANT: 
+  - PRIORITIZE GENERIC MEDICINES for all alternatives
+  - Always provide exact medication names for alternatives, not general classes
+  - Always provide exact numerical savings percentages (e.g., 45, 70)
+  - Always provide exact prices with ₹ symbol (e.g., ₹10.99, ₹15.99)
+  - Never use terms like "variable", "potentially", or "depending on"
+  - If you don't know the exact information, use reasonable estimates based on market data
+  - For each branded medication, ensure that at least one truly generic alternative is provided
+  
+  Format your response as a JSON array following this structure:
+  [
+    {
+      "name": "Medication Name",
+      "matchedDosage": "Dosage",
+      "description": "Brief description of medication purpose",
+      "alternatives": [
+        { 
+          "name": "Generic Alternative 1", 
+          "savingsPercent": 70, 
+          "price": "₹12.50" 
+        },
+        { 
+          "name": "Generic Alternative 2", 
+          "savingsPercent": 45, 
+          "price": "₹18.75" 
+        }
+      ]
+    }
+  ]
+`;
       
       // Make API call to Gemini
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`, {
@@ -390,11 +506,14 @@ const MedicationIdentificationPage = () => {
                               <div className="text-green-600 font-bold text-lg">
                                 {alternative.savingsPercent}% less
                               </div>
-                              <p className="text-xs text-gray-500">than brand name</p>
+                              <p className="text-xs text-gray-500">than brand </p>
                             </div>
-                            <button className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
-                              Learn More
-                            </button>
+                            <button 
+  onClick={() => navigate(`/medicine/${encodeURIComponent(alternative.name)}`)}
+  className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
+>
+  Learn More
+</button>
                           </div>
                         </div>
                       ))}
@@ -411,6 +530,64 @@ const MedicationIdentificationPage = () => {
                   </div>
                 </div>
               ))}
+
+              {/* Save Medications Button */}
+              <div className="mt-8">
+                <div className="p-4 bg-white rounded-2xl shadow-md border border-gray-100">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Save Medications to Your Profile</h3>
+                    <p className="text-gray-600 mb-6">
+                      Save these medications to your profile to track them and receive reminders.
+                    </p>
+                    
+                    {savingStatus === 'idle' && (
+                      <button
+                        onClick={saveMedicationsToDatabase}
+                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md font-medium"
+                      >
+                        Save Medications
+                      </button>
+                    )}
+                    
+                    {savingStatus === 'saving' && (
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin h-8 w-8 border-4 border-indigo-500 rounded-full border-t-transparent mb-3"></div>
+                        <p className="text-gray-600">Saving medications...</p>
+                      </div>
+                    )}
+                    
+                    {savingStatus === 'success' && (
+                      <div className="flex flex-col items-center">
+                        <div className="rounded-full bg-green-100 p-2 mb-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <p className="text-green-600 font-medium">Medications saved successfully!</p>
+                        <p className="text-gray-500 text-sm mt-1">Redirecting to dashboard...</p>
+                      </div>
+                    )}
+                    
+                    {savingStatus === 'error' && (
+                      <div className="flex flex-col items-center">
+                        <div className="rounded-full bg-red-100 p-2 mb-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                        <p className="text-red-600 font-medium">Failed to save medications</p>
+                        <p className="text-gray-500 text-sm mt-1">Please try again later</p>
+                        <button
+                          onClick={saveMedicationsToDatabase}
+                          className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 p-8 text-center">

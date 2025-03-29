@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { createWorker } from 'tesseract.js';
 import samplePrescription from '../assets/sample_prescription.png';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const PrescriptionScanPage = () => {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -14,12 +15,16 @@ const PrescriptionScanPage = () => {
   const [processingProgress, setProcessingProgress] = useState(0);
   const [extractedText, setExtractedText] = useState(' ');
   const [showResults, setShowResults] = useState(false);
+  const [confidenceScore, setConfidenceScore] = useState(0); // Add confidence score state
 
   
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
+  
+  // Initialize Gemini API
+  const genAI = new GoogleGenerativeAI("YOUR_GEMINI_API_KEY"); // Replace with your actual API key
   
   // Redirect if not signed in
   React.useEffect(() => {
@@ -101,65 +106,91 @@ const PrescriptionScanPage = () => {
     }
   };
   
-  // Process image with Tesseract OCR
+  // Process image with Gemini API
   const processImage = async (imageData) => {
     try {
       setProcessingStatus('capturing');
       setProcessingProgress(0);
       
-      // In Tesseract.js v4, language is specified during worker creation
       setProcessingStatus('enhancing');
       setProcessingProgress(25);
-      
-      // Create worker with language specified directly
-      const worker = await createWorker('eng');
-      
-      // Optional: Set custom parameters for better medical term recognition
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-+()%/mg',
+  
+      // Convert base64 image to binary
+      const base64Data = imageData.split(',')[1];
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                text: "Extract prescription text. Follow these rules:\n" +
+                      "1. Remove any decorative formatting\n" +
+                      "2. List medications clearly\n" +
+                      "3. Include dosage and frequency\n" +
+                      "5. Remove unnecessary symbols or headers\n" +
+                      "Extract all text from this prescription image. Focus on medication names, dosages, and instructions. Format the output clearly and maintain the original structure.\n\n" +
+                      "Also provide a confidence score from 0-100 on how certain you are about the extracted text. Format this at the end as: [CONFIDENCE_SCORE:X]"
+              },
+              {
+                inline_data: {
+                  mime_type: "image/png",
+                  data: base64Data
+                }
+              }
+            ]
+          }]
+        })
       });
+  
+      const data = await response.json();
       
-      // Update progress
-      setProcessingStatus('extracting');
-      setProcessingProgress(50);
+      if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+        throw new Error('Invalid response from Gemini API');
+      }
+  
+      const prescriptionText = data.candidates[0].content.parts[0].text;
+  
+      // Extract confidence score if available
+      let cleanedText = prescriptionText;
+      let score = 75; // Default confidence score
       
-      // Recognize text in image
-      const { data } = await worker.recognize(imageData);
-      setProcessingProgress(75);
+      const confidenceMatch = prescriptionText.match(/\[CONFIDENCE_SCORE:(\d+)\]/);
+      if (confidenceMatch && confidenceMatch[1]) {
+        score = parseInt(confidenceMatch[1]);
+        // Remove the confidence score from the text
+        cleanedText = prescriptionText.replace(/\[CONFIDENCE_SCORE:\d+\]/, '');
+      }
       
-      // Process the extracted text
-      let prescriptionText = data.text;
-      
-      // Basic text processing to clean up OCR results
-      prescriptionText = prescriptionText
-        .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
-        .replace(/(\r\n|\n|\r)/gm, '\n') // Normalize line breaks
-        .trim();                         // Remove leading/trailing whitespace
-      
-      // Save the processed text
-      setExtractedText(prescriptionText);
+      // Advanced text cleaning
+      cleanedText = cleanedText
+        .replace(/\*+/g, '')           // Remove asterisks
+        .replace(/^#+/gm, '')           // Remove header symbols
+        .replace(/^\s*\d+\.\s*/gm, '')  // Remove numbered list markers
+        .replace(/^\s*-\s*/gm, '')      // Remove bullet points
+        .replace(/\s+/g, ' ')           // Normalize whitespace
+        .replace(/([a-zA-Z])\s*:\s*/g, '$1: ')  // Standardize colons
+        .trim();
+  
+      // Save the processed text and confidence score
+      setExtractedText(cleanedText);
+      setConfidenceScore(score);
       setShowResults(true);
-      
-      // Update progress
+  
       setProcessingStatus('identifying');
       setProcessingProgress(90);
-      
+  
       // Finish up
       setTimeout(() => {
         setProcessingStatus(null);
         setProcessingProgress(100);
-        
-        // Log the extracted text for debugging
-        // console.log("Extracted Prescription Text:", prescriptionText);
-        
-        // Here you would continue with medication identification based on the text
-        // Example: identifyMedications(prescriptionText);
       }, 1000);
-      
-      // Terminate worker when done
-      await worker.terminate();
+  
     } catch (error) {
-    //   console.error("Text extraction error:", error);
+      console.error("Text extraction error:", error);
       alert("Error processing prescription. Please try again.");
       setProcessingStatus(null);
       setProcessingProgress(0);
@@ -245,7 +276,7 @@ const PrescriptionScanPage = () => {
       
       <p className="text-gray-600 mb-4">
         {processingStatus === 'extracting' 
-          ? 'Using Tesseract OCR to recognize text in your prescription...' 
+          ? 'Using Google Gemini AI to analyze your prescription...' 
           : 'Please wait while we process your prescription...'}
       </p>
       <p className="text-xs text-gray-500 max-w-xs mx-auto">
@@ -253,6 +284,19 @@ const PrescriptionScanPage = () => {
       </p>
     </div>
   );
+  
+  // Get confidence level color based on score
+  const getConfidenceColor = (score) => {
+    if (score >= 85) return 'bg-green-100 text-green-800';
+    if (score >= 70) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  const getConfidenceLabel = (score) => {
+    if (score >= 85) return 'High';
+    if (score >= 70) return 'Medium';
+    return 'Low';
+  };
   
   // Render text extraction results
   const renderResults = () => {
@@ -265,17 +309,21 @@ const PrescriptionScanPage = () => {
             <h3 className="text-xl font-semibold text-gray-900">
               Extracted Prescription Text
             </h3>
-            <div className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">
-              Analysis Complete
+            <div className="flex items-center">
+              <div className={`mr-2 text-xs px-3 py-1 rounded-full font-medium ${getConfidenceColor(confidenceScore)}`}>
+                {getConfidenceLabel(confidenceScore)} Confidence
+              </div>
+              <div className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full font-medium">
+                Analysis Complete
+              </div>
             </div>
           </div>
           
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 overflow-auto max-h-64">
             <textarea
               className="text-sm text-gray-700 font-mono w-full h-full min-h-[150px] bg-transparent focus:outline-none resize-none"
-              value={extractedText }
+              value={extractedText}
               onChange={(e) => setExtractedText(e.target.value)}
-            //   placeholder="No text detected. Please try again with a clearer image or manually enter medications here."
             />
           </div>
           
@@ -285,9 +333,20 @@ const PrescriptionScanPage = () => {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
-            <p className="ml-2 text-sm text-gray-600">
-              You can review and edit the extracted text before proceeding. Add or modify medications as needed.
-            </p>
+            <div className="ml-2">
+              <p className="text-sm text-gray-600">
+                You can review and edit the extracted text before proceeding. Add or modify medications as needed.
+              </p>
+              <div className="mt-2 flex items-center">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="h-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600" 
+                    style={{ width: `${confidenceScore}%` }}
+                  ></div>
+                </div>
+                <span className="ml-2 text-xs font-medium text-gray-700">{confidenceScore}%</span>
+              </div>
+            </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -303,7 +362,7 @@ const PrescriptionScanPage = () => {
             <button 
               onClick={() => {
                 // Navigate to medications identification page with the extracted text
-                navigate('/medications', { state: { extractedText } });
+                navigate('/medications', { state: { extractedText, confidenceScore } });
               }}
               className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md font-medium flex-1 flex justify-center items-center"
             >
@@ -681,4 +740,4 @@ const PrescriptionScanPage = () => {
   );
 };
 
-export default PrescriptionScanPage; 
+export default PrescriptionScanPage;

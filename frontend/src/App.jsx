@@ -22,12 +22,16 @@ import Dashboard from './components/Dashboard'
 import NearbyPharmacies from './components/NearbyPharmacies'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
 import MedicationIdentificationPage from './components/MedicationIdentificationPage'
-
+import MedicationDetailsPage from './components/MedicationDetailsPage'
+import MedicationForm from './components/MedicationForm'
+import RemindersPage from './pages/RemindersPage'
+import Layout from './components/Layout'
 
 
 // Create a HomePage component that combines all landing page sections
 const HomePage = () => (
-  <>
+  <><div className="gtranslate_wrapper">
+
     <HeroSection />
     <FeaturesSection />
     <HowItWorksSection />
@@ -35,6 +39,7 @@ const HomePage = () => (
     <BenefitsSection />
     <TrustSection />
     <CtaSection />
+  </div>
   </>
 );
 
@@ -159,7 +164,22 @@ const AppLayout = () => {
           />
           
           <Route path="/medications" element={<MedicationIdentificationPage />} />
+          <Route path="/medications/add" element={<MedicationForm />} />
           
+          {/* Reminders page */}
+          <Route 
+            path="/reminders" 
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RemindersPage />
+                </Layout>
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* In your router configuration file */}
+          <Route path="/medicine/:medicationName" element={<MedicationDetailsPage />} />
           {/* Catch-all route for 404 */}
           <Route 
             path="*" 

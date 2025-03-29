@@ -37,8 +37,13 @@ const reminderRoutes = require('./routes/reminderRoutes');
 app.use('/api/reminders', reminderRoutes);
 
 // Activity routes
-const activityRoutes = require('./routes/activityRoutes');
+const activityRoutes = require('./routes/activityRoute');
 app.use('/api/activities', activityRoutes);
+
+// Medicine details routes
+const medicine_details_Routes = require('./routes/medicineDetailsRoutes');
+app.use('/api/medicine', medicine_details_Routes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

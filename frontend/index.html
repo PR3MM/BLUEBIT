@@ -5,6 +5,35 @@
     <link rel="icon" type="image/svg+xml" href="./src/assets/M-23-3-2025 (1).png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MediScanAI</title>
+    <style>
+      /* Hide the top Google Translate banner */
+      .goog-te-banner-frame {
+        display: none !important;
+      }
+      .skiptranslate {
+        display: none !important;
+      }
+      body {
+        top: 0px !important;
+      }
+
+      /* Style the Google Translate dropdown */
+      #google_translate_element {
+        display: inline-block;
+        margin-left: 10px;
+      }
+      
+      /* Custom styling for the dropdown */
+      .goog-te-gadget {
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+      }
+      .goog-te-gadget .goog-te-combo {
+        padding: 3px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

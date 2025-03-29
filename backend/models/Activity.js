@@ -5,11 +5,16 @@ const activitySchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+    },
+    userId: {
+      type: String,
+      required: false,
     },
     type: {
       type: String,
-      enum: ['medication_taken', 'medication_skipped', 'prescription_added', 'prescription_filled', 'reminder_created', 'reminder_modified'],
+      enum: ['medication_added', 'medication_taken', 'medication_skipped', 'medication_modified', 'medication_deleted',
+             'prescription_added', 'prescription_filled', 'prescription_deleted', 'reminder_created', 'reminder_modified'],
       required: true,
     },
     medication: {
