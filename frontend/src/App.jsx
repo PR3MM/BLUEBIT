@@ -19,6 +19,7 @@ import BenefitsSection from './components/BenefitsSection'
 import TrustSection from './components/TrustSection'
 import CtaSection from './components/CtaSection'
 import Dashboard from './components/Dashboard'
+import NearbyPharmacies from './components/NearbyPharmacies'
 import PrescriptionScanPage from './components/PrescriptionScanPage'
 import MedicationIdentificationPage from './components/MedicationIdentificationPage'
 import MedicationDetailsPage from './components/MedicationDetailsPage'
@@ -143,6 +144,15 @@ const AppLayout = () => {
               </ProtectedRoute>
             } 
           />
+
+          <Route 
+            path="/nearby-pharmacies" 
+            element={
+              <ProtectedRoute>
+                <NearbyPharmacies />
+              </ProtectedRoute>
+            } 
+          />
           
           <Route 
             path="/scan-prescription" 
@@ -240,3 +250,5 @@ const App = () => {
 }
 
 export default App
+
+//import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
