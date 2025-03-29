@@ -11,10 +11,15 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.25.2",
+    "@react-google-maps/api": "^2.20.6",
     "@vercel/speed-insights": "^1.2.0",
+    "leaflet": "^1.9.4",
+    "leaflet-geosearch": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.4.0",
+    "react-spinners": "^0.15.0",
     "recharts": "^2.15.1",
     "tesseract.js": "^6.0.0"
   },
