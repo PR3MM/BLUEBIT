@@ -146,6 +146,15 @@ const AppLayout = () => {
           />
 
           <Route 
+            path="/scan-prescription" 
+            element={
+              <ProtectedRoute>
+                <PrescriptionScanPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
             path="/nearby-pharmacies" 
             element={
               <ProtectedRoute>
