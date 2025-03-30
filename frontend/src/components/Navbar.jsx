@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, UserButton } from '@clerk/clerk-react';
 import { useNavigate, Link } from 'react-router-dom';
-// import GoogleTranslate from '../services/GoogleTranslate.jsx';
+import GoogleTranslate from '../services/GoogleTranslate.jsx';
+
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -64,7 +65,7 @@ const Navbar = () => {
                 MediScanAI
               </span>
             </Link>
-            {/* <GoogleTranslate/> */}
+            <GoogleTranslate/>
           </div>
 
           {/* Desktop menu */}

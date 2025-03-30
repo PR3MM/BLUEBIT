@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
          BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { medicationApi, activityApi, prescriptionApi ,reminderApi} from '../services/api';
 import SearchBar from './SearchBar';
+import GoogleTranslate from '../services/GoogleTranslate.jsx';
 // import { medicationApi, activityApi, prescriptionApi, reminderApi } from '../services/api';
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -951,6 +952,8 @@ const Dashboard = () => {
                 <span className="ml-3 text-xl font-bold text-white">
                   <button onClick={() => navigate('/')} className="focus:outline-none transition-transform duration-300 hover:scale-105">MediScanAI</button>
                 </span>
+            <GoogleTranslate/>
+
               </div>
             </div>
             
@@ -976,7 +979,7 @@ const Dashboard = () => {
             <div className="hidden md:flex items-center space-x-3">
               <Link 
                 to="/scan-prescription"
-                className="inline-flex items-center px-3.5 py-1.5 border border-transparent rounded-full shadow-sm text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition-all duration-200"
+                className="w-32 inline-flex items-center px-3.5 py-1.5 border border-transparent rounded-full shadow-sm text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition-all duration-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
