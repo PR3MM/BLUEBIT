@@ -8,7 +8,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            return "vendor"; // Creates a separate "vendor.js" file for dependencies
+            return "vendor";
           }
         }
       }
