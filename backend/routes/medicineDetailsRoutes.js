@@ -82,7 +82,7 @@ router.get('/medication/:medicationName', async (req, res) => {
       `;
       
       // Make API call to Gemini
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ router.get('/medication/:medicationName', async (req, res) => {
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 2648,
+            maxOutputTokens: 4000,
           }
         })
       });
