@@ -118,7 +118,7 @@ const PrescriptionScanPage = () => {
       // Convert base64 image to binary
       const base64Data = imageData.split(',')[1];
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -13,7 +13,7 @@ router.post('/extract-text', async (req, res) => {
     const imageBuffer = Buffer.from(image, 'base64');
 
     // Initialize Gemini Vision model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro-exp-03-25" });
 
     // Create image part for the model
     const imagePart = {
