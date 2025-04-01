@@ -28,7 +28,7 @@
 
 MediScanAI is a comprehensive web application designed to revolutionize how users manage their medications and reduce healthcare costs. Leveraging cutting-edge AI technology, the platform enables users to scan prescriptions, identify medications, and discover cost-effective alternatives. 
 
-The application serves both patients and healthcare providers with an intuitive interface, providing seamless access to medication information and significant savings opportunities through a data-driven approach.
+The application intuitively serves patients and healthcare providers, providing seamless access to medication information and significant savings opportunities through a data-driven approach.
 
 **Key Goals:**
 - Improve medication adherence
