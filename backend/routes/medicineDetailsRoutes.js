@@ -97,7 +97,7 @@ router.get('/medication/:medicationName', async (req, res) => {
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 2648,
           }
         })
       });
