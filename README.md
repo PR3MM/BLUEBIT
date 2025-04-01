@@ -11,7 +11,7 @@
   [![Tesseract.js](https://img.shields.io/badge/Tesseract.js-OCR-orange)](https://tesseract.projectnaptha.com/)
 </div>
 
-## 📋 Table of Contents
+## 📋  Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
@@ -223,7 +223,7 @@ Yes, MediScanAI is fully responsive and works on all devices. A dedicated mobile
 
 <details>
 <summary><strong>How accurate is the prescription scanning?</strong></summary>
-Our OCR technology achieves over 95% accuracy for clear prescription images. The system continuously improves through machine learning.
+Our OCR technology achieves over 95% accuracy for clear prescription images. The system continuously improves through machine learning. 
 </details>
 
 
