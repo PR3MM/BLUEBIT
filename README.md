@@ -11,7 +11,7 @@
   [![Tesseract.js](https://img.shields.io/badge/Tesseract.js-OCR-orange)](https://tesseract.projectnaptha.com/)
 </div>
 
-## 📋 Table of Contents
+## 📋  Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
@@ -28,7 +28,7 @@
 
 MediScanAI is a comprehensive web application designed to revolutionize how users manage their medications and reduce healthcare costs. Leveraging cutting-edge AI technology, the platform enables users to scan prescriptions, identify medications, and discover cost-effective alternatives. 
 
-The application serves both patients and healthcare providers with an intuitive interface, providing seamless access to medication information and significant savings opportunities through a data-driven approach.
+The application intuitively serves patients and healthcare providers, providing seamless access to medication information and significant savings opportunities through a data-driven approach.
 
 **Key Goals:**
 - Improve medication adherence
@@ -223,7 +223,7 @@ Yes, MediScanAI is fully responsive and works on all devices. A dedicated mobile
 
 <details>
 <summary><strong>How accurate is the prescription scanning?</strong></summary>
-Our OCR technology achieves over 95% accuracy for clear prescription images. The system continuously improves through machine learning.
+Our OCR technology achieves over 95% accuracy for clear prescription images. The system continuously improves through machine learning. 
 </details>
 
 
