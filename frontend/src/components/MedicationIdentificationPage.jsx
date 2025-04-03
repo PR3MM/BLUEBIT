@@ -222,11 +222,7 @@ const MedicationIdentificationPage = () => {
                 { text: prompt }
               ]
             }
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 1024,
-          }
+          ]
         })
       });
       
