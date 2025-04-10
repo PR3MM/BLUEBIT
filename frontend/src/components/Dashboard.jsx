@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [reminders, setReminders] = useState([]);
   const [allReminders, setAllReminders] = useState([]);
+  const [recentMedications, setRecentMedications] = useState([]);
 
   const [recommendedMedicines, setRecommendedMedicines] = useState([]);
 
@@ -134,6 +135,13 @@ const Dashboard = () => {
         // Fetch medications
         const medicationsData = await medicationApi.getMedications(token);
         setMedications(medicationsData);
+        //till 2 days ago
+        setRecentMedications(medicationsData.filter(med => { 
+          const medDate = new Date(med.createdAt);
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          return medDate >= sevenDaysAgo;
+        }));
 
         // Fetch recent activities
         const activitiesData = await activityApi.getRecentActivities(10, token);
@@ -212,6 +220,12 @@ const Dashboard = () => {
         // Fetch medications
         const medicationsData = await medicationApi.getMedications(token);
         setMedications(medicationsData);
+        setRecentMedications(medicationsData.filter(med => { 
+          const medDate = new Date(med.createdAt);
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          return medDate >= sevenDaysAgo;
+        }));
         
         // Fetch recent activities
         const activitiesData = await activityApi.getRecentActivities(10, token);
@@ -836,6 +850,12 @@ const Dashboard = () => {
         
         // Update medications state
         setMedications([...medications, newMed]);
+        setRecentMedications(medicationsData.filter(med => { 
+          const medDate = new Date(med.createdAt);
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          return medDate >= sevenDaysAgo;
+        }));
       }
       
       // Create a reminder for 5 minutes from now
@@ -1322,9 +1342,9 @@ const Dashboard = () => {
                     <Link to="/medications" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</Link>
                   </div>
                   <div className="p-5">
-                    {medications && medications.length > 0 ? (
+                    {recentMedications && recentMedications.length > 0 ? (
                       <ul className="divide-y divide-gray-100">
-                        {medications.map((med) => (
+                        {recentMedications.map((med) => (
                           <li key={med._id} className="py-3 flex justify-between items-center hover:bg-gray-50 px-2 rounded-lg transition-colors duration-200">
                             <div>
                               <div className="font-medium text-gray-800">{med.name} {med.dosage} <button 
