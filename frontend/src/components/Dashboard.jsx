@@ -1339,7 +1339,7 @@ const Dashboard = () => {
                       </svg>
                       Your Medications
                     </h2>
-                    <Link to="/medications" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</Link>
+                    <Link to="#saved-alternatives" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">View All</Link>
                   </div>
                   <div className="p-5">
                     {recentMedications && recentMedications.length > 0 ? (
