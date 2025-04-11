@@ -135,11 +135,11 @@ const Dashboard = () => {
         // Fetch medications
         const medicationsData = await medicationApi.getMedications(token);
         setMedications(medicationsData);
-        //till 2 days ago
+        //till 3 days ago
         setRecentMedications(medicationsData.filter(med => { 
           const medDate = new Date(med.createdAt);
           const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 3);
           return medDate >= sevenDaysAgo;
         }));
 
